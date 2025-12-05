@@ -1,4 +1,7 @@
-export default function RootLayout({ children }) {
+import NavBar from "../components/NavBar";
+import Footer from "../components/Footer";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -11,9 +14,16 @@ export default function RootLayout({ children }) {
         padding: 0, 
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
         backgroundColor: '#0f0f0f',
-        color: '#ffffff'
+        color: '#ffffff',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
-        {children}
+        <NavBar />
+        <div style={{ flex: 1 }}>
+          {children}
+        </div>
+        <Footer />
       </body>
     </html>
   );
