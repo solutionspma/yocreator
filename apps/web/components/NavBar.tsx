@@ -1,19 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useAuth } from "../lib/AuthContext";
 
 export default function NavBar() {
-  const [user, setUser] = useState<any>(null);
+  const { user, logout: authLogout, loading } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
-  }, []);
-
   function logout() {
-    localStorage.removeItem("user");
-    setUser(null);
+    authLogout();
     window.location.href = "/";
   }
 

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "../../lib/AuthContext";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -8,6 +9,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { login } = useAuth();
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -16,7 +18,7 @@ export default function LoginPage() {
 
     // Genesis master account check
     if (username === "masteracct" && password === "Number79-2025") {
-      localStorage.setItem("user", JSON.stringify({ username, role: "genesis", tier: "unlimited" }));
+      login({ username, role: "genesis", tier: "unlimited" });
       router.push("/admin");
       return;
     }
@@ -32,7 +34,7 @@ export default function LoginPage() {
         });
         const users = await res.json();
         if (users.length > 0 && users[0].password === password) {
-          localStorage.setItem("user", JSON.stringify(users[0]));
+          login(users[0]);
           router.push("/studio");
           return;
         }

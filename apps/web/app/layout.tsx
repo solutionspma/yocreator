@@ -1,5 +1,4 @@
-import NavBar from "../components/NavBar";
-import Footer from "../components/Footer";
+import ClientLayout from "../components/ClientLayout";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -19,11 +18,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         display: 'flex',
         flexDirection: 'column'
       }}>
-        <NavBar />
-        <div style={{ flex: 1 }}>
+        <ClientLayout>
           {children}
-        </div>
-        <Footer />
+        </ClientLayout>
       </body>
     </html>
   );

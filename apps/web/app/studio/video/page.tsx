@@ -96,7 +96,11 @@ export default function VideoPage() {
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      const newJob = data[0];
+      if (!res.ok) {
+        setResult(`Error: ${data.message || data.error || JSON.stringify(data)}`);
+        return;
+      }
+      const newJob = Array.isArray(data) ? data[0] : data;
       setResult(`Video job created: #${newJob?.id || "unknown"}`);
       setActiveJob(newJob);
     } catch (e: any) {

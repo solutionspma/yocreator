@@ -86,7 +86,12 @@ export default function AvatarPage() {
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      setResult(`Avatar job created: #${data[0]?.id || "unknown"}`);
+      if (!res.ok) {
+        setResult(`Error: ${data.message || data.error || JSON.stringify(data)}`);
+        return;
+      }
+      const newJob = Array.isArray(data) ? data[0] : data;
+      setResult(`Avatar job created: #${newJob?.id || "unknown"}`);
     } catch (e: any) {
       setResult(`Error: ${e.message}`);
     } finally {
