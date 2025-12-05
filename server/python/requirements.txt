@@ -1,0 +1,9 @@
+gtts
+torch
+torchaudio
+transformers
+diffusers
+opencv-python
+ffmpeg-python
+pillow
+requests
