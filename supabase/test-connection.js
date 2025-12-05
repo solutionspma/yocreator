@@ -1,10 +1,23 @@
 // YOcreator Supabase Connection Test
 // Run with: node supabase/test-connection.js
+// Requires .env file with SUPABASE_URL and SUPABASE_SERVICE_ROLE
 
 import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
 
-const supabaseUrl = 'https://uksjnwnvarhldlxyymef.supabase.co';
-const supabaseServiceRole = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwZ3pzanFta3ZobXNoY3ZueXlmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzQ5NDU1MiwiZXhwIjoyMDc5MDcwNTUyfQ.eMgVW2hoNLA1l4rjQEbEFa2aXIG-Ih6eLguAUIWyirw';
+// Load environment variables from .env file
+dotenv.config();
+
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE;
+
+if (!supabaseUrl || !supabaseServiceRole) {
+  console.error('❌ Missing environment variables!');
+  console.error('   Please ensure .env file exists with:');
+  console.error('   - SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL');
+  console.error('   - SUPABASE_SERVICE_ROLE');
+  process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseServiceRole);
 

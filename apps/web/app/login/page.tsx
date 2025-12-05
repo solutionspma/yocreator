@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../../lib/AuthContext";
 
 export default function LoginPage() {
@@ -9,7 +9,18 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { login } = useAuth();
+  const searchParams = useSearchParams();
+  const { login, isAuthenticated } = useAuth();
+  
+  // Get redirect URL from query params (set by ProtectedRoute)
+  const redirectUrl = searchParams.get("redirect") || "/studio";
+
+  // If already logged in, redirect
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push(redirectUrl);
+    }
+  }, [isAuthenticated, router, redirectUrl]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -35,7 +46,7 @@ export default function LoginPage() {
         const users = await res.json();
         if (users.length > 0 && users[0].password === password) {
           login(users[0]);
-          router.push("/studio");
+          router.push(redirectUrl);
           return;
         }
       } catch (e) {
