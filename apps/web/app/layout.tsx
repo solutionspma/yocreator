@@ -1,7 +1,20 @@
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>YOcreator Studio</title>
+      </head>
+      <body style={{ 
+        margin: 0, 
+        padding: 0, 
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        backgroundColor: '#0f0f0f',
+        color: '#ffffff'
+      }}>
+        {children}
+      </body>
     </html>
   );
 }
