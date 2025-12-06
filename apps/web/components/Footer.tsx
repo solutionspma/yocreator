@@ -1,35 +1,46 @@
+"use client";
 import Link from "next/link";
+import { useResponsive } from "../lib/useResponsive";
 
 export default function Footer() {
+  const { isMobile, isTablet } = useResponsive();
+
+  const footerLinkStyle: React.CSSProperties = {
+    color: "#666",
+    textDecoration: "none",
+    fontSize: isMobile ? "13px" : "14px",
+    transition: "color 0.2s",
+  };
+
   return (
     <footer style={{
       backgroundColor: "#0a0a0a",
       borderTop: "1px solid #222",
-      padding: "40px",
+      padding: isMobile ? "24px 16px" : "40px",
       marginTop: "auto",
     }}>
       <div style={{
         maxWidth: "1400px",
         margin: "0 auto",
         display: "grid",
-        gridTemplateColumns: "repeat(4, 1fr)",
-        gap: "40px",
+        gridTemplateColumns: isMobile ? "1fr 1fr" : isTablet ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
+        gap: isMobile ? "20px" : "40px",
       }}>
-        {/* Brand */}
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-            <span style={{ fontSize: "24px" }}>🎬</span>
-            <span style={{ fontSize: "18px", fontWeight: "bold" }}>YOcreator</span>
+        {/* Brand - full width on mobile */}
+        <div style={{ gridColumn: isMobile ? "1 / -1" : "auto" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+            <span style={{ fontSize: isMobile ? "20px" : "24px" }}>🎬</span>
+            <span style={{ fontSize: isMobile ? "16px" : "18px", fontWeight: "bold" }}>YOcreator</span>
           </div>
-          <p style={{ color: "#666", fontSize: "14px", lineHeight: "1.6" }}>
+          <p style={{ color: "#666", fontSize: isMobile ? "13px" : "14px", lineHeight: "1.6", margin: 0 }}>
             AI-powered voice cloning, avatar creation, and video generation platform.
           </p>
         </div>
 
         {/* Studio */}
         <div>
-          <h4 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "16px", color: "#888" }}>STUDIO</h4>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <h4 style={{ fontSize: isMobile ? "11px" : "14px", fontWeight: "600", color: "#888", margin: 0, marginBottom: isMobile ? "10px" : "16px" }}>STUDIO</h4>
+          <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? "8px" : "12px" }}>
             <Link href="/studio/voice" style={footerLinkStyle}>Voice Generator</Link>
             <Link href="/studio/avatar" style={footerLinkStyle}>Avatar Builder</Link>
             <Link href="/studio/video" style={footerLinkStyle}>Video Creator</Link>
@@ -39,19 +50,19 @@ export default function Footer() {
 
         {/* Platform */}
         <div>
-          <h4 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "16px", color: "#888" }}>PLATFORM</h4>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <h4 style={{ fontSize: isMobile ? "11px" : "14px", fontWeight: "600", color: "#888", margin: 0, marginBottom: isMobile ? "10px" : "16px" }}>PLATFORM</h4>
+          <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? "8px" : "12px" }}>
             <Link href="/settings" style={footerLinkStyle}>Settings</Link>
             <Link href="/admin" style={footerLinkStyle}>Admin Dashboard</Link>
-            <a href="#" style={footerLinkStyle}>API Documentation</a>
+            <Link href="/studio/test" style={footerLinkStyle}>API Test Center</Link>
             <a href="#" style={footerLinkStyle}>Web3 Integration</a>
           </div>
         </div>
 
         {/* Company */}
         <div>
-          <h4 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "16px", color: "#888" }}>COMPANY</h4>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <h4 style={{ fontSize: isMobile ? "11px" : "14px", fontWeight: "600", color: "#888", margin: 0, marginBottom: isMobile ? "10px" : "16px" }}>COMPANY</h4>
+          <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? "8px" : "12px" }}>
             <a href="#" style={footerLinkStyle}>About</a>
             <a href="#" style={footerLinkStyle}>Pricing</a>
             <a href="#" style={footerLinkStyle}>Privacy Policy</a>
@@ -63,27 +74,21 @@ export default function Footer() {
       {/* Bottom Bar */}
       <div style={{
         maxWidth: "1400px",
-        margin: "40px auto 0",
-        paddingTop: "24px",
+        margin: isMobile ? "20px auto 0" : "40px auto 0",
+        paddingTop: isMobile ? "16px" : "24px",
         borderTop: "1px solid #222",
         display: "flex",
+        flexDirection: isMobile ? "column" : "row",
         justifyContent: "space-between",
-        alignItems: "center",
+        alignItems: isMobile ? "center" : "center",
+        gap: isMobile ? "8px" : "0",
+        textAlign: isMobile ? "center" : "left",
       }}>
-        <p style={{ color: "#666", fontSize: "14px" }}>
+        <p style={{ color: "#666", fontSize: isMobile ? "11px" : "14px", margin: 0 }}>
           © 2025 Pitch Marketing Agency. All rights reserved.
         </p>
-        <div style={{ display: "flex", gap: "16px" }}>
-          <span style={{ color: "#666", fontSize: "14px" }}>Powered by $MODULAR</span>
-        </div>
+        <span style={{ color: "#666", fontSize: isMobile ? "11px" : "14px" }}>Powered by $MODULAR</span>
       </div>
     </footer>
   );
 }
-
-const footerLinkStyle: React.CSSProperties = {
-  color: "#666",
-  textDecoration: "none",
-  fontSize: "14px",
-  transition: "color 0.2s",
-};

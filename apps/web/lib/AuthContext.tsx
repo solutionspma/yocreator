@@ -7,6 +7,7 @@ interface User {
   role?: string;
   tier?: string;
   email?: string;
+  features?: string[];
 }
 
 interface AuthContextType {

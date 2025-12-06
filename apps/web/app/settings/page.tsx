@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useResponsive } from "../../lib/useResponsive";
 
 interface Settings {
   email: string;
@@ -48,6 +49,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isMobile, isTablet } = useResponsive();
 
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_KEY || "";
@@ -166,10 +168,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <main style={{ padding: "40px", maxWidth: "1200px", margin: "0 auto" }}>
-      <a href="/" style={{ color: "#888", textDecoration: "none" }}>← Back to Home</a>
-      <h1 style={{ fontSize: "48px", fontWeight: "bold", marginTop: "20px" }}>⚙️ Settings</h1>
-      <p style={{ color: "#888", marginBottom: "40px" }}>
+    <main style={{ padding: isMobile ? "16px" : "40px", maxWidth: "1200px", margin: "0 auto" }}>
+      <a href="/" style={{ color: "#888", textDecoration: "none", fontSize: isMobile ? "14px" : "16px" }}>← Back to Home</a>
+      <h1 style={{ fontSize: isMobile ? "28px" : "48px", fontWeight: "bold", marginTop: "16px" }}>⚙️ Settings</h1>
+      <p style={{ color: "#888", marginBottom: isMobile ? "24px" : "40px", fontSize: isMobile ? "14px" : "16px" }}>
         {isGenesis ? "Genesis Master Account - Full Platform Control" : "Manage your account settings"}
       </p>
 
@@ -182,24 +184,33 @@ export default function SettingsPage() {
           border: `1px solid ${saveStatus.includes("✓") ? "#4ade80" : "#ef4444"}`,
           borderRadius: "8px",
           color: saveStatus.includes("✓") ? "#4ade80" : "#ef4444",
+          fontSize: isMobile ? "14px" : "16px",
         }}>
           {saveStatus}
         </div>
       )}
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "30px", flexWrap: "wrap" }}>
+      <div style={{ 
+        display: "flex", 
+        gap: "8px", 
+        marginBottom: isMobile ? "20px" : "30px", 
+        flexWrap: "wrap",
+        overflowX: isMobile ? "auto" : "visible",
+      }}>
         {tabs.filter(t => !t.genesis || isGenesis).map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             style={{
-              padding: "10px 20px",
+              padding: isMobile ? "8px 14px" : "10px 20px",
               backgroundColor: activeTab === tab.id ? "#2563eb" : "#1a1a1a",
               color: "white",
               border: "1px solid #333",
               borderRadius: "8px",
               cursor: "pointer",
+              fontSize: isMobile ? "13px" : "14px",
+              whiteSpace: "nowrap",
             }}
           >
             {tab.label}

@@ -1,9 +1,13 @@
 [build]
-  command = "cd apps/web && pnpm install && pnpm build"
-  publish = "apps/web/.next"
+  base = "apps/web"
+  command = "npm install && npm run build"
+  publish = "out"
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
+# Redirect SPA routes to index
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
 
 [[headers]]
   for = "/*"

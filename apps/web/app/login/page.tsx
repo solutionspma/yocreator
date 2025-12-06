@@ -34,6 +34,18 @@ export default function LoginPage() {
       return;
     }
 
+    // Beta tester account - full access like master but as regular user
+    if (username === "YCbeta1" && password === "Tester2025") {
+      login({ 
+        username, 
+        role: "beta_tester", 
+        tier: "unlimited",
+        features: ["avatar", "voice", "video", "projects", "gallery", "settings"]
+      });
+      router.push("/studio");
+      return;
+    }
+
     // Regular user auth via Supabase
     const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
     const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_KEY || "";
