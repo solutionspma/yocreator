@@ -466,7 +466,7 @@ function RealisticHumanBody() {
   const seg = 32;
 
   return (
-    <group ref={groupRef} scale={scale} position={[0, -scale * 0.5, 0]} rotation={[0, Math.PI, 0]}>
+    <group ref={groupRef} scale={scale} position={[0, -scale * 0.5, 0]}>
       {/* ===== HEAD ===== */}
       <group position={[0, 0.85, 0]}>
         {/* Skull */}
@@ -705,7 +705,7 @@ function ClothingLayer() {
   }), [ui.showWireframe]);
   
   return (
-    <group scale={height} position={[0, -height * 0.5, 0]} rotation={[0, Math.PI, 0]}>
+    <group scale={height} position={[0, -height * 0.5, 0]}>
       {/* Top */}
       {(hasTop || hasWorksuit) && (
         <group position={[0, 0.45, 0]}>
@@ -768,7 +768,7 @@ function CameraController() {
       front: [0, 0.8, 2.5],
       side: [2.5, 0.8, 0],
       back: [0, 0.8, -2.5],
-      face: [0, 1.5, 1],
+      face: [0, 1.4, 0.8],
       custom: [1.5, 1, 1.5],
     };
     
@@ -812,7 +812,7 @@ export default function AvatarCanvas() {
       <Canvas
         shadows
         camera={{ position: [0, 0.8, 2.5], fov: 45 }}
-        gl={{ antialias: true }}
+        gl={{ antialias: true, alpha: false }}
         onCreated={({ gl }) => { gl.setClearColor('#12121f'); }}
       >
         <Suspense fallback={<Loader />}>
