@@ -18,6 +18,326 @@ function Loader() {
   );
 }
 
+// Hair Mesh Component - Different hairstyles
+function HairMesh({ 
+  hairId, 
+  headWidth, 
+  headHeight, 
+  headDepth, 
+  hairMat,
+  seg 
+}: { 
+  hairId: string | null; 
+  headWidth: number; 
+  headHeight: number; 
+  headDepth: number;
+  hairMat: THREE.Material;
+  seg: number;
+}) {
+  if (!hairId || hairId === 'bald') return null;
+  
+  // Different hair geometry based on style
+  switch (hairId) {
+    // FADE CUTS - Lil Boosie style
+    case 'baldfade':
+    case 'lowfade':
+    case 'highfade':
+      const fadeHeight = hairId === 'baldfade' ? 0.25 : hairId === 'lowfade' ? 0.35 : 0.4;
+      return (
+        <group>
+          {/* Low hair on top */}
+          <mesh position={[0, headHeight * fadeHeight, 0]} material={hairMat} scale={[headWidth * 0.95, headHeight * 0.15, headDepth * 0.9]} castShadow>
+            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
+          </mesh>
+          {/* Fade sides - darker gradient simulated with smaller pieces */}
+          <mesh position={[0, headHeight * 0.1, 0]} material={hairMat} scale={[headWidth * 0.98, headHeight * 0.08, headDepth * 0.95]} castShadow>
+            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, Math.PI * 0.35, Math.PI * 0.25]} />
+          </mesh>
+        </group>
+      );
+    
+    // BUZZ CUT / CREW CUT
+    case 'buzzcut':
+    case 'crewcut':
+      return (
+        <mesh position={[0, headHeight * 0.35, 0]} material={hairMat} scale={[headWidth * 1.02, headHeight * 0.2, headDepth * 0.98]} castShadow>
+          <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
+        </mesh>
+      );
+    
+    // 360 WAVES
+    case 'waves':
+      return (
+        <group>
+          <mesh position={[0, headHeight * 0.3, 0]} material={hairMat} scale={[headWidth * 1.01, headHeight * 0.18, headDepth * 0.98]} castShadow>
+            <sphereGeometry args={[1, 24, 24, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
+          </mesh>
+          {/* Wave pattern - rings */}
+          {[0, 0.05, 0.1].map((offset, i) => (
+            <mesh key={i} position={[0, headHeight * (0.35 - offset), 0]} material={hairMat} castShadow>
+              <torusGeometry args={[headWidth * (0.7 - i * 0.1), 0.003, 8, 32]} />
+            </mesh>
+          ))}
+        </group>
+      );
+    
+    // FLAT TOP
+    case 'flatop':
+      return (
+        <mesh position={[0, headHeight * 0.45, 0]} material={hairMat} castShadow>
+          <cylinderGeometry args={[headWidth * 0.85, headWidth * 0.9, headHeight * 0.35, seg]} />
+        </mesh>
+      );
+    
+    // AFRO
+    case 'afro01':
+      return (
+        <mesh position={[0, headHeight * 0.5, 0]} material={hairMat} scale={[headWidth * 2.2, headHeight * 1.8, headDepth * 2]} castShadow>
+          <sphereGeometry args={[1, seg, seg]} />
+        </mesh>
+      );
+    
+    // AFRO PUFF
+    case 'afropuff':
+      return (
+        <mesh position={[0, headHeight * 0.7, 0]} material={hairMat} scale={[headWidth * 1.5, headHeight * 1.2, headDepth * 1.3]} castShadow>
+          <sphereGeometry args={[1, seg, seg]} />
+        </mesh>
+      );
+    
+    // DREADLOCKS
+    case 'dreads':
+    case 'dreadslong':
+    case 'dreadsshort':
+      const dreadLength = hairId === 'dreadsshort' ? 0.08 : hairId === 'dreads' ? 0.15 : 0.25;
+      const dreadCount = 20;
+      return (
+        <group>
+          {/* Base cap */}
+          <mesh position={[0, headHeight * 0.4, 0]} material={hairMat} scale={[headWidth * 1.05, headHeight * 0.5, headDepth * 1.02]} castShadow>
+            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
+          </mesh>
+          {/* Individual dreads */}
+          {Array.from({ length: dreadCount }).map((_, i) => {
+            const angle = (i / dreadCount) * Math.PI * 2;
+            const row = Math.floor(i / 8);
+            const tilt = 0.3 + row * 0.15;
+            const x = Math.sin(angle) * headWidth * (0.7 + row * 0.2);
+            const z = Math.cos(angle) * headDepth * (0.7 + row * 0.2);
+            const y = headHeight * (0.4 - row * 0.1);
+            return (
+              <mesh 
+                key={i} 
+                position={[x, y, z]} 
+                rotation={[tilt * Math.cos(angle), 0, tilt * Math.sin(angle)]}
+                material={hairMat} 
+                castShadow
+              >
+                <cylinderGeometry args={[0.008, 0.005, dreadLength, 6]} />
+              </mesh>
+            );
+          })}
+        </group>
+      );
+    
+    // CORNROWS
+    case 'cornrows':
+      return (
+        <group>
+          {/* Cornrow lines going back */}
+          {[-0.08, -0.04, 0, 0.04, 0.08].map((offset, i) => (
+            <mesh 
+              key={i} 
+              position={[offset, headHeight * 0.35, -headDepth * 0.2]} 
+              rotation={[Math.PI * 0.35, 0, 0]}
+              material={hairMat} 
+              castShadow
+            >
+              <capsuleGeometry args={[0.006, headDepth * 1.5, 4, 8]} />
+            </mesh>
+          ))}
+        </group>
+      );
+    
+    // BOX BRAIDS
+    case 'boxbraids':
+      const braidCount = 30;
+      return (
+        <group>
+          {/* Base */}
+          <mesh position={[0, headHeight * 0.35, 0]} material={hairMat} scale={[headWidth * 1.02, headHeight * 0.4, headDepth * 1]} castShadow>
+            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
+          </mesh>
+          {/* Braids hanging down */}
+          {Array.from({ length: braidCount }).map((_, i) => {
+            const angle = (i / braidCount) * Math.PI * 2;
+            const x = Math.sin(angle) * headWidth * 0.9;
+            const z = Math.cos(angle) * headDepth * 0.9;
+            return (
+              <mesh 
+                key={i} 
+                position={[x, -0.02, z]} 
+                material={hairMat} 
+                castShadow
+              >
+                <cylinderGeometry args={[0.005, 0.004, 0.18, 4]} />
+              </mesh>
+            );
+          })}
+        </group>
+      );
+    
+    // TWISTS
+    case 'twists':
+      return (
+        <group>
+          <mesh position={[0, headHeight * 0.4, 0]} material={hairMat} scale={[headWidth * 1.1, headHeight * 0.6, headDepth * 1.05]} castShadow>
+            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
+          </mesh>
+          {/* Twist texture bumps */}
+          {Array.from({ length: 15 }).map((_, i) => {
+            const angle = (i / 15) * Math.PI * 2;
+            const x = Math.sin(angle) * headWidth * 0.8;
+            const z = Math.cos(angle) * headDepth * 0.75;
+            return (
+              <mesh key={i} position={[x, headHeight * 0.5, z]} material={hairMat} castShadow>
+                <sphereGeometry args={[0.015, 8, 8]} />
+              </mesh>
+            );
+          })}
+        </group>
+      );
+    
+    // MOHAWK
+    case 'mohawk01':
+      return (
+        <group>
+          {/* Main mohawk strip */}
+          {Array.from({ length: 8 }).map((_, i) => (
+            <mesh 
+              key={i} 
+              position={[0, headHeight * (0.5 + i * 0.05), -headDepth * (0.3 - i * 0.1)]} 
+              material={hairMat} 
+              castShadow
+            >
+              <sphereGeometry args={[0.02 + i * 0.005, 8, 8]} />
+            </mesh>
+          ))}
+        </group>
+      );
+    
+    // PONYTAIL
+    case 'ponytail01':
+      return (
+        <group>
+          {/* Hair on top */}
+          <mesh position={[0, headHeight * 0.35, 0]} material={hairMat} scale={[headWidth * 1.05, headHeight * 0.6, headDepth * 1]} castShadow>
+            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
+          </mesh>
+          {/* Ponytail */}
+          <mesh position={[0, headHeight * 0.2, -headDepth * 1.1]} rotation={[Math.PI * 0.3, 0, 0]} material={hairMat} castShadow>
+            <cylinderGeometry args={[0.025, 0.015, 0.2, 8]} />
+          </mesh>
+        </group>
+      );
+    
+    // BUN
+    case 'bun01':
+      return (
+        <group>
+          {/* Hair on top */}
+          <mesh position={[0, headHeight * 0.35, 0]} material={hairMat} scale={[headWidth * 1.03, headHeight * 0.5, headDepth * 0.98]} castShadow>
+            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
+          </mesh>
+          {/* Bun */}
+          <mesh position={[0, headHeight * 0.65, -headDepth * 0.3]} material={hairMat} castShadow>
+            <sphereGeometry args={[0.045, seg, seg]} />
+          </mesh>
+        </group>
+      );
+    
+    // SHORT
+    case 'short01':
+      return (
+        <mesh position={[0, headHeight * 0.35, 0]} material={hairMat} scale={[headWidth * 1.06, headHeight * 0.55, headDepth * 1.02]} castShadow>
+          <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
+        </mesh>
+      );
+    
+    // MEDIUM
+    case 'medium01':
+      return (
+        <group>
+          <mesh position={[0, headHeight * 0.35, 0]} material={hairMat} scale={[headWidth * 1.1, headHeight * 0.7, headDepth * 1.1]} castShadow>
+            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.65]} />
+          </mesh>
+          {/* Side hair */}
+          <mesh position={[-headWidth * 0.85, 0, 0]} material={hairMat} scale={[0.4, 0.8, 0.6]} castShadow>
+            <sphereGeometry args={[0.06, 12, 12]} />
+          </mesh>
+          <mesh position={[headWidth * 0.85, 0, 0]} material={hairMat} scale={[0.4, 0.8, 0.6]} castShadow>
+            <sphereGeometry args={[0.06, 12, 12]} />
+          </mesh>
+        </group>
+      );
+    
+    // LONG
+    case 'long01':
+      return (
+        <group>
+          {/* Top */}
+          <mesh position={[0, headHeight * 0.35, 0]} material={hairMat} scale={[headWidth * 1.08, headHeight * 0.65, headDepth * 1.05]} castShadow>
+            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.65]} />
+          </mesh>
+          {/* Long back hair */}
+          <mesh position={[0, -headHeight * 0.3, -headDepth * 0.5]} material={hairMat} scale={[headWidth * 1.3, 0.25, 0.08]} castShadow>
+            <boxGeometry args={[1, 1, 1]} />
+          </mesh>
+          {/* Side drapes */}
+          <mesh position={[-headWidth * 0.9, -headHeight * 0.2, 0]} material={hairMat} scale={[0.05, 0.2, 0.08]} castShadow>
+            <boxGeometry args={[1, 1, 1]} />
+          </mesh>
+          <mesh position={[headWidth * 0.9, -headHeight * 0.2, 0]} material={hairMat} scale={[0.05, 0.2, 0.08]} castShadow>
+            <boxGeometry args={[1, 1, 1]} />
+          </mesh>
+        </group>
+      );
+    
+    // CURLY
+    case 'curly01':
+      return (
+        <group>
+          {/* Base curly mass */}
+          <mesh position={[0, headHeight * 0.4, 0]} material={hairMat} scale={[headWidth * 1.4, headHeight * 0.9, headDepth * 1.3]} castShadow>
+            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.65]} />
+          </mesh>
+          {/* Curl bumps for texture */}
+          {Array.from({ length: 25 }).map((_, i) => {
+            const angle = (i / 25) * Math.PI * 2;
+            const row = Math.floor(i / 10);
+            const radius = headWidth * (1.3 - row * 0.2);
+            const x = Math.sin(angle) * radius;
+            const z = Math.cos(angle) * radius * 0.9;
+            const y = headHeight * (0.5 - row * 0.15);
+            return (
+              <mesh key={i} position={[x, y, z]} material={hairMat} castShadow>
+                <sphereGeometry args={[0.02, 6, 6]} />
+              </mesh>
+            );
+          })}
+        </group>
+      );
+    
+    default:
+      // Default short hair
+      return (
+        <mesh position={[0, headHeight * 0.3, -headDepth * 0.1]} material={hairMat} scale={[headWidth * 1.08, headHeight * 0.7, headDepth * 1.05]} castShadow>
+          <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
+        </mesh>
+      );
+  }
+}
+
 // Scaled Sphere component for body parts
 function ScaledSphere({ 
   scaleX, scaleY, scaleZ, material, segments = 32, ...props 
@@ -146,7 +466,7 @@ function RealisticHumanBody() {
   const seg = 32;
 
   return (
-    <group ref={groupRef} scale={scale} position={[0, -scale * 0.5, 0]}>
+    <group ref={groupRef} scale={scale} position={[0, -scale * 0.5, 0]} rotation={[0, Math.PI, 0]}>
       {/* ===== HEAD ===== */}
       <group position={[0, 0.85, 0]}>
         {/* Skull */}
@@ -205,12 +525,8 @@ function RealisticHumanBody() {
           <sphereGeometry args={[body.earSize, 8, 8]} />
         </mesh>
         
-        {/* Hair */}
-        {avatar.hair && avatar.hair !== 'bald' && (
-          <mesh position={[0, body.headHeight * 0.3, -body.headDepth * 0.1]} material={hairMat} scale={[body.headWidth * 1.08, body.headHeight * 0.7, body.headDepth * 1.05]} castShadow>
-            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
-          </mesh>
-        )}
+        {/* ===== HAIR STYLES ===== */}
+        <HairMesh hairId={avatar.hair} headWidth={body.headWidth} headHeight={body.headHeight} headDepth={body.headDepth} hairMat={hairMat} seg={seg} />
       </group>
       
       {/* ===== NECK ===== */}
@@ -389,7 +705,7 @@ function ClothingLayer() {
   }), [ui.showWireframe]);
   
   return (
-    <group scale={height} position={[0, -height * 0.5, 0]}>
+    <group scale={height} position={[0, -height * 0.5, 0]} rotation={[0, Math.PI, 0]}>
       {/* Top */}
       {(hasTop || hasWorksuit) && (
         <group position={[0, 0.45, 0]}>

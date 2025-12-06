@@ -170,16 +170,31 @@ export const clothingCatalog: ClothingItem[] = [
   { id: 'worksuit', name: 'Work Suit', category: 'fullbody', thumbnail: '🧑‍💼' },
 ];
 
-// Hair catalog
+// Hair catalog - Real hairstyles
 export const hairCatalog = [
-  { id: 'bald', name: 'Bald', thumbnail: '👨‍🦲' },
-  { id: 'short01', name: 'Short', thumbnail: '👨' },
-  { id: 'medium01', name: 'Medium', thumbnail: '🧑' },
-  { id: 'long01', name: 'Long', thumbnail: '👩' },
-  { id: 'curly01', name: 'Curly', thumbnail: '🧑‍🦱' },
-  { id: 'afro01', name: 'Afro', thumbnail: '👨‍🦱' },
-  { id: 'ponytail01', name: 'Ponytail', thumbnail: '👧' },
-  { id: 'mohawk01', name: 'Mohawk', thumbnail: '🤘' },
+  { id: 'bald', name: 'Bald', thumbnail: '👨‍🦲', type: 'none' },
+  { id: 'baldfade', name: 'Bald Fade', thumbnail: '💈', type: 'fade' },
+  { id: 'lowfade', name: 'Low Fade', thumbnail: '✂️', type: 'fade' },
+  { id: 'highfade', name: 'High Fade', thumbnail: '💇‍♂️', type: 'fade' },
+  { id: 'buzzcut', name: 'Buzz Cut', thumbnail: '👮', type: 'short' },
+  { id: 'crewcut', name: 'Crew Cut', thumbnail: '👨‍✈️', type: 'short' },
+  { id: 'short01', name: 'Short', thumbnail: '👨', type: 'short' },
+  { id: 'medium01', name: 'Medium', thumbnail: '🧑', type: 'medium' },
+  { id: 'long01', name: 'Long', thumbnail: '👩', type: 'long' },
+  { id: 'curly01', name: 'Curly', thumbnail: '🧑‍🦱', type: 'curly' },
+  { id: 'afro01', name: 'Afro', thumbnail: '✊🏿', type: 'afro' },
+  { id: 'afropuff', name: 'Afro Puff', thumbnail: '🌺', type: 'afro' },
+  { id: 'dreads', name: 'Dreadlocks', thumbnail: '🦁', type: 'dreads' },
+  { id: 'dreadslong', name: 'Long Dreads', thumbnail: '🎸', type: 'dreads' },
+  { id: 'dreadsshort', name: 'Short Dreads', thumbnail: '🎤', type: 'dreads' },
+  { id: 'cornrows', name: 'Cornrows', thumbnail: '🌾', type: 'braids' },
+  { id: 'boxbraids', name: 'Box Braids', thumbnail: '🎀', type: 'braids' },
+  { id: 'twists', name: 'Twists', thumbnail: '🌀', type: 'braids' },
+  { id: 'ponytail01', name: 'Ponytail', thumbnail: '👧', type: 'long' },
+  { id: 'bun01', name: 'Bun', thumbnail: '🥮', type: 'long' },
+  { id: 'mohawk01', name: 'Mohawk', thumbnail: '🤘', type: 'mohawk' },
+  { id: 'waves', name: '360 Waves', thumbnail: '🌊', type: 'short' },
+  { id: 'flatop', name: 'Flat Top', thumbnail: '📦', type: 'short' },
 ];
 
 // Skin tone presets
