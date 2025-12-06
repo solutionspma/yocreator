@@ -89,18 +89,18 @@ function HairMesh({
         </mesh>
       );
     
-    // AFRO
+    // AFRO - sits on TOP of head, doesn't cover face
     case 'afro01':
       return (
-        <mesh position={[0, headHeight * 0.5, 0]} material={hairMat} scale={[headWidth * 2.2, headHeight * 1.8, headDepth * 2]} castShadow>
-          <sphereGeometry args={[1, seg, seg]} />
+        <mesh position={[0, headHeight * 1.2, 0]} material={hairMat} scale={[headWidth * 1.8, headHeight * 1.4, headDepth * 1.6]} castShadow>
+          <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.7]} />
         </mesh>
       );
     
-    // AFRO PUFF
+    // AFRO PUFF - higher on head
     case 'afropuff':
       return (
-        <mesh position={[0, headHeight * 0.7, 0]} material={hairMat} scale={[headWidth * 1.5, headHeight * 1.2, headDepth * 1.3]} castShadow>
+        <mesh position={[0, headHeight * 1.4, 0]} material={hairMat} scale={[headWidth * 1.2, headHeight * 1.0, headDepth * 1.1]} castShadow>
           <sphereGeometry args={[1, seg, seg]} />
         </mesh>
       );
@@ -226,102 +226,103 @@ function HairMesh({
         </group>
       );
     
-    // PONYTAIL
+    // PONYTAIL - hair on top with tail in back
     case 'ponytail01':
       return (
         <group>
           {/* Hair on top */}
-          <mesh position={[0, headHeight * 0.35, 0]} material={hairMat} scale={[headWidth * 1.05, headHeight * 0.6, headDepth * 1]} castShadow>
-            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
+          <mesh position={[0, headHeight * 0.75, 0]} material={hairMat} scale={[headWidth * 1.05, headHeight * 0.5, headDepth * 1]} castShadow>
+            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
           </mesh>
-          {/* Ponytail */}
-          <mesh position={[0, headHeight * 0.2, -headDepth * 1.1]} rotation={[Math.PI * 0.3, 0, 0]} material={hairMat} castShadow>
-            <cylinderGeometry args={[0.025, 0.015, 0.2, 8]} />
+          {/* Ponytail - in back */}
+          <mesh position={[0, headHeight * 0.5, -headDepth * 0.9]} rotation={[Math.PI * 0.4, 0, 0]} material={hairMat} castShadow>
+            <cylinderGeometry args={[0.03, 0.015, 0.25, 8]} />
           </mesh>
         </group>
       );
     
-    // BUN
+    // BUN - on top/back of head
     case 'bun01':
       return (
         <group>
           {/* Hair on top */}
-          <mesh position={[0, headHeight * 0.35, 0]} material={hairMat} scale={[headWidth * 1.03, headHeight * 0.5, headDepth * 0.98]} castShadow>
-            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
+          <mesh position={[0, headHeight * 0.75, 0]} material={hairMat} scale={[headWidth * 1.03, headHeight * 0.45, headDepth * 0.98]} castShadow>
+            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
           </mesh>
-          {/* Bun */}
-          <mesh position={[0, headHeight * 0.65, -headDepth * 0.3]} material={hairMat} castShadow>
-            <sphereGeometry args={[0.045, seg, seg]} />
+          {/* Bun - on top back */}
+          <mesh position={[0, headHeight * 1.1, -headDepth * 0.4]} material={hairMat} castShadow>
+            <sphereGeometry args={[0.05, seg, seg]} />
           </mesh>
         </group>
       );
     
-    // SHORT
+    // SHORT - sits on top of head
     case 'short01':
       return (
-        <mesh position={[0, headHeight * 0.35, 0]} material={hairMat} scale={[headWidth * 1.06, headHeight * 0.55, headDepth * 1.02]} castShadow>
-          <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
+        <mesh position={[0, headHeight * 0.8, 0]} material={hairMat} scale={[headWidth * 1.06, headHeight * 0.5, headDepth * 1.02]} castShadow>
+          <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
         </mesh>
       );
     
-    // MEDIUM
+    // MEDIUM - sits on top, doesn't cover eyes
     case 'medium01':
       return (
         <group>
-          <mesh position={[0, headHeight * 0.35, 0]} material={hairMat} scale={[headWidth * 1.1, headHeight * 0.7, headDepth * 1.1]} castShadow>
-            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.65]} />
+          {/* Top cap */}
+          <mesh position={[0, headHeight * 0.75, 0]} material={hairMat} scale={[headWidth * 1.1, headHeight * 0.6, headDepth * 1.05]} castShadow>
+            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
           </mesh>
-          {/* Side hair */}
-          <mesh position={[-headWidth * 0.85, 0, 0]} material={hairMat} scale={[0.4, 0.8, 0.6]} castShadow>
-            <sphereGeometry args={[0.06, 12, 12]} />
+          {/* Side hair - beside ears, not over face */}
+          <mesh position={[-headWidth * 1.0, -headHeight * 0.1, 0]} material={hairMat} scale={[0.3, 0.5, 0.5]} castShadow>
+            <sphereGeometry args={[0.08, 12, 12]} />
           </mesh>
-          <mesh position={[headWidth * 0.85, 0, 0]} material={hairMat} scale={[0.4, 0.8, 0.6]} castShadow>
-            <sphereGeometry args={[0.06, 12, 12]} />
+          <mesh position={[headWidth * 1.0, -headHeight * 0.1, 0]} material={hairMat} scale={[0.3, 0.5, 0.5]} castShadow>
+            <sphereGeometry args={[0.08, 12, 12]} />
           </mesh>
         </group>
       );
     
-    // LONG
+    // LONG - flows down back and sides, not over face
     case 'long01':
       return (
         <group>
-          {/* Top */}
-          <mesh position={[0, headHeight * 0.35, 0]} material={hairMat} scale={[headWidth * 1.08, headHeight * 0.65, headDepth * 1.05]} castShadow>
-            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.65]} />
+          {/* Top cap */}
+          <mesh position={[0, headHeight * 0.75, 0]} material={hairMat} scale={[headWidth * 1.08, headHeight * 0.55, headDepth * 1.05]} castShadow>
+            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
           </mesh>
-          {/* Long back hair */}
-          <mesh position={[0, -headHeight * 0.3, -headDepth * 0.5]} material={hairMat} scale={[headWidth * 1.3, 0.25, 0.08]} castShadow>
-            <boxGeometry args={[1, 1, 1]} />
+          {/* Long back hair - flowing down */}
+          <mesh position={[0, -headHeight * 0.5, -headDepth * 0.7]} material={hairMat} castShadow>
+            <boxGeometry args={[headWidth * 2.2, headHeight * 1.5, 0.03]} />
           </mesh>
-          {/* Side drapes */}
-          <mesh position={[-headWidth * 0.9, -headHeight * 0.2, 0]} material={hairMat} scale={[0.05, 0.2, 0.08]} castShadow>
-            <boxGeometry args={[1, 1, 1]} />
+          {/* Side drapes - beside face */}
+          <mesh position={[-headWidth * 1.0, -headHeight * 0.3, 0]} material={hairMat} castShadow>
+            <boxGeometry args={[0.02, headHeight * 1.2, 0.04]} />
           </mesh>
-          <mesh position={[headWidth * 0.9, -headHeight * 0.2, 0]} material={hairMat} scale={[0.05, 0.2, 0.08]} castShadow>
-            <boxGeometry args={[1, 1, 1]} />
+          <mesh position={[headWidth * 1.0, -headHeight * 0.3, 0]} material={hairMat} castShadow>
+            <boxGeometry args={[0.02, headHeight * 1.2, 0.04]} />
           </mesh>
         </group>
       );
     
-    // CURLY
+    // CURLY - on top of head
     case 'curly01':
       return (
         <group>
-          {/* Base curly mass */}
-          <mesh position={[0, headHeight * 0.4, 0]} material={hairMat} scale={[headWidth * 1.4, headHeight * 0.9, headDepth * 1.3]} castShadow>
-            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.65]} />
+          {/* Base curly mass - higher position */}
+          <mesh position={[0, headHeight * 0.9, 0]} material={hairMat} scale={[headWidth * 1.3, headHeight * 0.8, headDepth * 1.2]} castShadow>
+            <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
           </mesh>
-          {/* Curl bumps for texture */}
-          {Array.from({ length: 25 }).map((_, i) => {
-            const angle = (i / 25) * Math.PI * 2;
-            const row = Math.floor(i / 10);
-            const radius = headWidth * (1.3 - row * 0.2);
+          {/* Curl bumps for texture - positioned higher */}
+          {Array.from({ length: 20 }).map((_, i) => {
+            const angle = (i / 20) * Math.PI * 2;
+            const row = Math.floor(i / 8);
+            const radius = headWidth * (1.15 - row * 0.15);
             const x = Math.sin(angle) * radius;
             const z = Math.cos(angle) * radius * 0.9;
-            const y = headHeight * (0.5 - row * 0.15);
+            const y = headHeight * (1.0 - row * 0.2);
             return (
               <mesh key={i} position={[x, y, z]} material={hairMat} castShadow>
-                <sphereGeometry args={[0.02, 6, 6]} />
+                <sphereGeometry args={[0.018, 6, 6]} />
               </mesh>
             );
           })}
@@ -329,10 +330,10 @@ function HairMesh({
       );
     
     default:
-      // Default short hair
+      // Default short hair - on top of head
       return (
-        <mesh position={[0, headHeight * 0.3, -headDepth * 0.1]} material={hairMat} scale={[headWidth * 1.08, headHeight * 0.7, headDepth * 1.05]} castShadow>
-          <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
+        <mesh position={[0, headHeight * 0.8, 0]} material={hairMat} scale={[headWidth * 1.06, headHeight * 0.5, headDepth * 1.02]} castShadow>
+          <sphereGeometry args={[1, seg, seg, 0, Math.PI * 2, 0, Math.PI * 0.55]} />
         </mesh>
       );
   }
@@ -382,16 +383,16 @@ function RealisticHumanBody() {
     const headHeight = (0.18 + (f.headHeight / 100 - 0.5) * 0.04) * headScale;
     const headDepth = (0.16 + (f.headDepth / 100 - 0.5) * 0.03) * headScale;
     
-    // Face features
-    const eyeSize = 0.012 + (f.eyeSize / 100 - 0.5) * 0.006;
-    const eyeSpacing = 0.032 + (f.eyeSpacing / 100 - 0.5) * 0.01;
-    const noseSize = 0.8 + (f.noseWidth / 100 - 0.5) * 0.4 + african * 0.2;
-    const noseLength = 0.025 + (f.noseLength / 100 - 0.5) * 0.015;
-    const mouthWidth = 0.03 + (f.mouthWidth / 100 - 0.5) * 0.015 + african * 0.005;
+    // Face features - BIGGER sizes for visibility
+    const eyeSize = 0.022 + (f.eyeSize / 100 - 0.5) * 0.012;  // 2x bigger
+    const eyeSpacing = 0.045 + (f.eyeSpacing / 100 - 0.5) * 0.015;
+    const noseSize = 1.2 + (f.noseWidth / 100 - 0.5) * 0.6 + african * 0.3;  // Bigger
+    const noseLength = 0.045 + (f.noseLength / 100 - 0.5) * 0.025;  // Longer
+    const mouthWidth = 0.045 + (f.mouthWidth / 100 - 0.5) * 0.02 + african * 0.008;  // Wider
     const lipFullness = (f.lipUpperFullness + f.lipLowerFullness) / 200;
     const jawWidth = headWidth * (0.9 + (f.jawWidth / 100 - 0.5) * 0.2 + gender * 0.1);
     const chinSize = 0.8 + (f.chinHeight / 100 - 0.5) * 0.4;
-    const earSize = 0.02 + (f.earSize / 100 - 0.5) * 0.01;
+    const earSize = 0.025 + (f.earSize / 100 - 0.5) * 0.012;  // Bigger
     
     // Neck
     const neckRadius = 0.045 + gender * 0.015 + muscle * 0.01 + (f.neckWidth / 100 - 0.5) * 0.015;
@@ -464,11 +465,14 @@ function RealisticHumanBody() {
 
   const scale = body.height;
   const seg = 32;
+  
+  // Position avatar so feet are at Y=0 (standing on floor)
+  const avatarHeight = 1.0; // Normalized height before scaling
 
   return (
-    <group ref={groupRef} scale={scale} position={[0, -scale * 0.5, 0]}>
+    <group ref={groupRef} scale={scale} position={[0, scale * 0.48, 0]}>
       {/* ===== HEAD ===== */}
-      <group position={[0, 0.85, 0]}>
+      <group position={[0, 0.42, 0]}>
         {/* Skull */}
         <ScaledSphere 
           scaleX={body.headWidth} scaleY={body.headHeight} scaleZ={body.headDepth} 
@@ -530,12 +534,12 @@ function RealisticHumanBody() {
       </group>
       
       {/* ===== NECK ===== */}
-      <mesh position={[0, 0.73, 0]} material={skinMat} castShadow>
+      <mesh position={[0, 0.30, 0]} material={skinMat} castShadow>
         <cylinderGeometry args={[body.neckRadius, body.neckRadius * 1.1, body.neckLength, seg]} />
       </mesh>
       
       {/* ===== TORSO ===== */}
-      <group position={[0, 0.45, 0]}>
+      <group position={[0, 0.02, 0]}>
         {/* Shoulders */}
         <mesh material={skinMat} rotation={[0, 0, Math.PI / 2]} castShadow>
           <capsuleGeometry args={[body.chestDepth, body.shoulderWidth * 2 - body.chestDepth * 2, 4, seg]} />
@@ -584,7 +588,7 @@ function RealisticHumanBody() {
       </group>
       
       {/* ===== LEFT ARM ===== */}
-      <group position={[-body.shoulderWidth - 0.02, 0.45, 0]}>
+      <group position={[-body.shoulderWidth - 0.02, 0.02, 0]}>
         <mesh position={[0, -body.armLength * 0.35, 0]} material={skinMat} castShadow>
           <capsuleGeometry args={[body.bicepRadius, body.armLength * 0.45, 4, seg]} />
         </mesh>
@@ -600,7 +604,7 @@ function RealisticHumanBody() {
       </group>
       
       {/* ===== RIGHT ARM ===== */}
-      <group position={[body.shoulderWidth + 0.02, 0.45, 0]}>
+      <group position={[body.shoulderWidth + 0.02, 0.02, 0]}>
         <mesh position={[0, -body.armLength * 0.35, 0]} material={skinMat} castShadow>
           <capsuleGeometry args={[body.bicepRadius, body.armLength * 0.45, 4, seg]} />
         </mesh>
@@ -616,7 +620,7 @@ function RealisticHumanBody() {
       </group>
       
       {/* ===== LEFT LEG ===== */}
-      <group position={[-body.hipWidth * 0.5, 0.1, 0]}>
+      <group position={[-body.hipWidth * 0.5, -0.33, 0]}>
         <mesh position={[0, -body.legLength * 0.3, 0]} material={skinMat} castShadow>
           <capsuleGeometry args={[body.thighRadius, body.legLength * 0.45, 4, seg]} />
         </mesh>
@@ -635,7 +639,7 @@ function RealisticHumanBody() {
       </group>
       
       {/* ===== RIGHT LEG ===== */}
-      <group position={[body.hipWidth * 0.5, 0.1, 0]}>
+      <group position={[body.hipWidth * 0.5, -0.33, 0]}>
         <mesh position={[0, -body.legLength * 0.3, 0]} material={skinMat} castShadow>
           <capsuleGeometry args={[body.thighRadius, body.legLength * 0.45, 4, seg]} />
         </mesh>
@@ -705,10 +709,10 @@ function ClothingLayer() {
   }), [ui.showWireframe]);
   
   return (
-    <group scale={height} position={[0, -height * 0.5, 0]}>
+    <group scale={height} position={[0, height * 0.48, 0]}>
       {/* Top */}
       {(hasTop || hasWorksuit) && (
-        <group position={[0, 0.45, 0]}>
+        <group position={[0, 0.02, 0]}>
           <mesh material={clothMat} rotation={[0, 0, Math.PI / 2]} castShadow>
             <capsuleGeometry args={[chestDepth + 0.015, shoulderWidth * 2 - chestDepth * 2, 4, 24]} />
           </mesh>
@@ -720,7 +724,7 @@ function ClothingLayer() {
       
       {/* Pants */}
       {(hasBottom || hasWorksuit) && (
-        <group position={[0, 0.1, 0]}>
+        <group position={[0, -0.33, 0]}>
           <mesh material={pantsMat} castShadow>
             <cylinderGeometry args={[hipWidth + 0.012, hipWidth + 0.012, 0.08, 24]} />
           </mesh>
@@ -736,10 +740,10 @@ function ClothingLayer() {
       {/* Shoes */}
       {hasShoes && (
         <>
-          <mesh position={[-hipWidth * 0.5, -legLength - 0.38, 0.02]} material={shoeMat} castShadow>
+          <mesh position={[-hipWidth * 0.5, -legLength - 0.82, 0.02]} material={shoeMat} castShadow>
             <boxGeometry args={[0.045, 0.03, 0.1]} />
           </mesh>
-          <mesh position={[hipWidth * 0.5, -legLength - 0.38, 0.02]} material={shoeMat} castShadow>
+          <mesh position={[hipWidth * 0.5, -legLength - 0.82, 0.02]} material={shoeMat} castShadow>
             <boxGeometry args={[0.045, 0.03, 0.1]} />
           </mesh>
         </>
@@ -747,7 +751,7 @@ function ClothingLayer() {
       
       {/* Dress */}
       {hasDress && (
-        <mesh position={[0, 0.2, 0]} material={dressMat} castShadow>
+        <mesh position={[0, -0.2, 0]} material={dressMat} castShadow>
           <coneGeometry args={[hipWidth + 0.08, 0.6, 24]} />
         </mesh>
       )}
@@ -765,11 +769,11 @@ function CameraController() {
     if (!controlsRef.current) return;
     
     const positions: Record<string, [number, number, number]> = {
-      front: [0, 0.8, 2.5],
-      side: [2.5, 0.8, 0],
-      back: [0, 0.8, -2.5],
-      face: [0, 1.4, 0.8],
-      custom: [1.5, 1, 1.5],
+      front: [0, 1.2, 3],
+      side: [3, 1.2, 0],
+      back: [0, 1.2, -3],
+      face: [0, 1.6, 1.2],
+      custom: [2, 1.5, 2],
     };
     
     const pos = positions[ui.cameraView] || positions.front;
@@ -786,7 +790,7 @@ function CameraController() {
       enableRotate={true}
       minDistance={0.5}
       maxDistance={10}
-      target={[0, 0.6, 0]}
+      target={[0, 1.0, 0]}
       mouseButtons={{
         LEFT: THREE.MOUSE.ROTATE,
         MIDDLE: THREE.MOUSE.DOLLY,
@@ -811,7 +815,7 @@ export default function AvatarCanvas() {
     <div className="w-full h-full">
       <Canvas
         shadows
-        camera={{ position: [0, 0.8, 2.5], fov: 45 }}
+        camera={{ position: [0, 1.2, 3], fov: 45 }}
         gl={{ antialias: true, alpha: false }}
         onCreated={({ gl }) => { gl.setClearColor('#12121f'); }}
       >
