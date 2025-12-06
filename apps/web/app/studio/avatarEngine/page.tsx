@@ -1,307 +1,203 @@
 'use client';
 
-import React, { Suspense, useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
-import { useAvatarStore, AvatarStyle, Gender } from './store';
+import React from 'react';
+import { useAvatarStore, MainTab, ModellingTab, GeometriesTab } from './store';
+import AvatarCanvas from './components/AvatarCanvas';
+import ModellingPanel from './components/ModellingPanel';
+import GeometriesPanel from './components/GeometriesPanel';
+import MaterialsPanel from './components/MaterialsPanel';
+import PosePanel from './components/PosePanel';
+import RenderingPanel from './components/RenderingPanel';
+import SettingsPanel from './components/SettingsPanel';
+import ExportPanel from './components/ExportPanel';
 
-// ============================================
-// OMNI-AVATAR ENGINE - MAIN PAGE
-// ============================================
-
-// Dynamic imports for code splitting
-const AvatarCanvas = dynamic(() => import('./components/AvatarCanvas'), { 
-  ssr: false,
-  loading: () => <CanvasLoader />
-});
-
-const BodyTab = dynamic(() => import('./components/MorphControls'), { ssr: false });
-const FaceTab = dynamic(() => import('./components/MorphControls').then(mod => ({ default: mod.FaceTab })), { ssr: false });
-const HairTab = dynamic(() => import('./components/HairSystem'), { ssr: false });
-const ClothingTab = dynamic(() => import('./components/ClothingSystem'), { ssr: false });
-const AccessoriesTab = dynamic(() => import('./components/AccessoriesTab'), { ssr: false });
-const AnimalsTab = dynamic(() => import('./components/AnimalsTab'), { ssr: false });
-const FaceScannerTab = dynamic(() => import('./components/FaceScanner'), { ssr: false });
-const ExportTab = dynamic(() => import('./components/ExportTab'), { ssr: false });
-
-// Loading component
-function CanvasLoader() {
-  return (
-    <div className="w-full h-full flex items-center justify-center bg-gray-900 rounded-xl">
-      <div className="text-center">
-        <div className="animate-spin text-4xl mb-4">⚙️</div>
-        <p className="text-gray-400">Loading 3D Engine...</p>
-      </div>
-    </div>
-  );
-}
-
-// Tab definitions
-type TabId = 'body' | 'face' | 'hair' | 'clothing' | 'accessories' | 'animals' | 'facescan' | 'export';
-
-interface TabDef {
-  id: TabId;
-  label: string;
-  icon: string;
-  humanOnly: boolean;
-}
-
-const tabs: TabDef[] = [
-  { id: 'body', label: 'Body', icon: '🧍', humanOnly: true },
-  { id: 'face', label: 'Face', icon: '😊', humanOnly: true },
-  { id: 'hair', label: 'Hair', icon: '💇', humanOnly: true },
-  { id: 'clothing', label: 'Clothing', icon: '👔', humanOnly: true },
-  { id: 'accessories', label: 'Accessories', icon: '👓', humanOnly: true },
-  { id: 'animals', label: 'Animals', icon: '🐕', humanOnly: false },
-  { id: 'facescan', label: 'Face Scan', icon: '📸', humanOnly: true },
-  { id: 'export', label: 'Export', icon: '📤', humanOnly: false },
+// Main tabs configuration
+const mainTabs: { id: MainTab; label: string; icon: string }[] = [
+  { id: 'modelling', label: 'Modelling', icon: '🧍' },
+  { id: 'geometries', label: 'Geometries', icon: '👕' },
+  { id: 'materials', label: 'Materials', icon: '🎨' },
+  { id: 'pose', label: 'Pose/Animate', icon: '💃' },
+  { id: 'rendering', label: 'Rendering', icon: '📷' },
+  { id: 'settings', label: 'Settings', icon: '⚙️' },
+  { id: 'export', label: 'Export', icon: '📤' },
 ];
 
 export default function AvatarEnginePage() {
-  const { 
-    avatar, 
-    ui, 
-    setActiveTab, 
-    setStyle, 
-    setGender,
-    resetAvatar,
-    toggleAutoRotate,
-    toggleWireframe,
-    setViewMode,
-  } = useAvatarStore();
+  const { ui, setMainTab, toggleWireframe, toggleSkeleton, setCameraView, avatar, reset, randomize, saveAvatar } = useAvatarStore();
 
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Get visible tabs based on avatar style
-  const visibleTabs = tabs.filter(tab => {
-    if (avatar.style === 'animal') {
-      return !tab.humanOnly || tab.id === 'animals' || tab.id === 'export';
-    }
-    return true;
-  });
-
-  // Render active tab content
-  const renderTabContent = () => {
-    switch (ui.activeTab) {
-      case 'body':
-        return <BodyTab />;
-      case 'face':
-        return <FaceTab />;
-      case 'hair':
-        return <HairTab />;
-      case 'clothing':
-        return <ClothingTab />;
-      case 'accessories':
-        return <AccessoriesTab />;
-      case 'animals':
-        return <AnimalsTab />;
-      case 'facescan':
-        return <FaceScannerTab />;
-      case 'export':
-        return <ExportTab />;
-      default:
-        return <BodyTab />;
+  const renderPanel = () => {
+    switch (ui.mainTab) {
+      case 'modelling': return <ModellingPanel />;
+      case 'geometries': return <GeometriesPanel />;
+      case 'materials': return <MaterialsPanel />;
+      case 'pose': return <PosePanel />;
+      case 'rendering': return <RenderingPanel />;
+      case 'settings': return <SettingsPanel />;
+      case 'export': return <ExportPanel />;
+      default: return <ModellingPanel />;
     }
   };
 
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin text-4xl mb-4">⚙️</div>
-          <p className="text-gray-400">Initializing Avatar Engine...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Header */}
-      <header className="h-16 border-b border-gray-800 flex items-center justify-between px-6">
-        <div className="flex items-center gap-4">
-          <a href="/studio" className="text-gray-400 hover:text-white transition-colors">
-            ← Studio
-          </a>
-          <div className="h-6 w-px bg-gray-800" />
-          <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-            Omni-Avatar Engine
-          </h1>
-        </div>
+    <div className="h-screen w-full bg-[#1a1a2e] text-white flex flex-col overflow-hidden">
+      {/* Top Toolbar */}
+      <div className="h-12 bg-[#16162a] border-b border-[#2a2a4a] flex items-center px-4 gap-4">
+        <h1 className="text-lg font-bold text-cyan-400">YOcreator</h1>
+        <span className="text-gray-400">|</span>
+        <span className="text-sm text-gray-300">Avatar Engine</span>
         
-        <div className="flex items-center gap-3">
-          {/* Style Selector */}
-          <div className="flex items-center gap-1 bg-gray-800 rounded-lg p-1">
-            {(['realistic', 'stylized', 'anime', 'cartoon'] as AvatarStyle[]).map((style) => (
-              <button
-                key={style}
-                onClick={() => setStyle(style)}
-                className={`px-3 py-1 rounded text-sm capitalize transition-colors ${
-                  avatar.style === style
-                    ? 'bg-purple-600 text-white'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                {style}
-              </button>
-            ))}
-          </div>
+        <div className="flex-1" />
+        
+        {/* Quick actions */}
+        <button onClick={reset} className="px-3 py-1 text-xs bg-red-600/20 hover:bg-red-600/40 border border-red-500/30 rounded transition">
+          Reset
+        </button>
+        <button onClick={randomize} className="px-3 py-1 text-xs bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/30 rounded transition">
+          Random
+        </button>
+        <button onClick={saveAvatar} className="px-3 py-1 text-xs bg-green-600/20 hover:bg-green-600/40 border border-green-500/30 rounded transition">
+          Save
+        </button>
+      </div>
 
-          {/* Gender Selector (for human avatars) */}
-          {avatar.style !== 'animal' && (
-            <div className="flex items-center gap-1 bg-gray-800 rounded-lg p-1">
-              {(['male', 'female', 'neutral'] as Gender[]).map((gender) => (
-                <button
-                  key={gender}
-                  onClick={() => setGender(gender)}
-                  className={`px-3 py-1 rounded text-sm capitalize transition-colors ${
-                    avatar.gender === gender
-                      ? 'bg-purple-600 text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  {gender === 'male' ? '♂️' : gender === 'female' ? '♀️' : '⚧️'} {gender}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Reset Button */}
+      {/* Main Tab Bar */}
+      <div className="h-10 bg-[#1e1e3a] border-b border-[#2a2a4a] flex items-center px-2">
+        {mainTabs.map((tab) => (
           <button
-            onClick={resetAvatar}
-            className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-400 hover:text-white transition-colors"
+            key={tab.id}
+            onClick={() => setMainTab(tab.id)}
+            className={`px-4 py-2 text-sm font-medium flex items-center gap-2 transition rounded-t ${
+              ui.mainTab === tab.id
+                ? 'bg-[#2a2a4a] text-cyan-400 border-t-2 border-cyan-400'
+                : 'text-gray-400 hover:text-white hover:bg-[#252545]'
+            }`}
           >
-            🔄 Reset
+            <span>{tab.icon}</span>
+            <span>{tab.label}</span>
           </button>
-        </div>
-      </header>
+        ))}
+      </div>
 
       {/* Main Content */}
-      <div className="flex h-[calc(100vh-64px)]">
+      <div className="flex flex-1 overflow-hidden">
         {/* Left Panel - Controls */}
-        <div className="w-96 border-r border-gray-800 flex flex-col">
-          {/* Tabs */}
-          <div className="flex flex-wrap gap-1 p-3 border-b border-gray-800 bg-gray-900/50">
-            {visibleTabs.map((tab) => (
+        <div className="w-80 bg-[#16162a] border-r border-[#2a2a4a] flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
+            {renderPanel()}
+          </div>
+        </div>
+
+        {/* Center - 3D Viewport */}
+        <div className="flex-1 relative bg-gradient-to-b from-[#1a1a2e] to-[#12121f]">
+          <AvatarCanvas />
+          
+          {/* Viewport Controls */}
+          <div className="absolute bottom-4 left-4 flex gap-2">
+            <button
+              onClick={toggleWireframe}
+              className={`p-2 rounded text-sm ${ui.showWireframe ? 'bg-cyan-500 text-white' : 'bg-[#2a2a4a] text-gray-300'}`}
+            >
+              Wireframe
+            </button>
+            <button
+              onClick={toggleSkeleton}
+              className={`p-2 rounded text-sm ${ui.showSkeleton ? 'bg-cyan-500 text-white' : 'bg-[#2a2a4a] text-gray-300'}`}
+            >
+              Skeleton
+            </button>
+          </div>
+
+          {/* Camera Views */}
+          <div className="absolute bottom-4 right-4 flex gap-2">
+            {(['front', 'side', 'back', 'face'] as const).map((view) => (
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-all ${
-                  ui.activeTab === tab.id
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
+                key={view}
+                onClick={() => setCameraView(view)}
+                className={`px-3 py-1 rounded text-sm capitalize ${
+                  ui.cameraView === view ? 'bg-cyan-500 text-white' : 'bg-[#2a2a4a] text-gray-300'
                 }`}
               >
-                <span>{tab.icon}</span>
-                <span>{tab.label}</span>
+                {view}
               </button>
             ))}
           </div>
 
-          {/* Tab Content */}
-          <div className="flex-1 overflow-hidden p-4">
-            <Suspense fallback={
-              <div className="flex items-center justify-center h-full">
-                <div className="animate-pulse text-gray-500">Loading...</div>
-              </div>
-            }>
-              {renderTabContent()}
-            </Suspense>
+          {/* Info overlay */}
+          <div className="absolute top-4 right-4 bg-[#16162a]/80 backdrop-blur px-3 py-2 rounded text-xs">
+            <div className="text-gray-400">Avatar: <span className="text-white">{avatar.name}</span></div>
+            <div className="text-gray-400">Gender: <span className="text-white">{avatar.macro.gender > 50 ? 'Male' : 'Female'}</span></div>
+            <div className="text-gray-400">Age: <span className="text-white">{Math.round(avatar.macro.age)}</span></div>
           </div>
         </div>
 
-        {/* Right Panel - 3D Canvas */}
-        <div className="flex-1 flex flex-col">
-          {/* Canvas Toolbar */}
-          <div className="h-12 border-b border-gray-800 flex items-center justify-between px-4 bg-gray-900/50">
-            {/* View Controls */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 mr-2">View:</span>
-              {(['full', 'head', 'upper', 'lower'] as const).map((view) => (
-                <button
-                  key={view}
-                  onClick={() => setViewMode(view)}
-                  className={`px-2 py-1 rounded text-xs capitalize ${
-                    ui.viewMode === view
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                  }`}
-                >
-                  {view}
-                </button>
-              ))}
-            </div>
-
-            {/* Display Options */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={toggleAutoRotate}
-                className={`px-2 py-1 rounded text-xs ${
-                  ui.autoRotate
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                }`}
-              >
-                🔄 Auto Rotate
-              </button>
-              <button
-                onClick={toggleWireframe}
-                className={`px-2 py-1 rounded text-xs ${
-                  ui.showWireframe
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                }`}
-              >
-                📐 Wireframe
-              </button>
-            </div>
+        {/* Right Panel - Preview/Assets */}
+        <div className="w-72 bg-[#16162a] border-l border-[#2a2a4a] flex flex-col">
+          <div className="p-3 border-b border-[#2a2a4a]">
+            <h3 className="text-sm font-semibold text-gray-300">Quick Preview</h3>
           </div>
-
-          {/* 3D Canvas */}
-          <div className="flex-1 p-4">
-            <div className="w-full h-full rounded-xl overflow-hidden border border-gray-800">
-              <Suspense fallback={<CanvasLoader />}>
-                <AvatarCanvas />
-              </Suspense>
+          <div className="flex-1 overflow-y-auto p-3">
+            {/* Mini previews */}
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="aspect-square bg-[#2a2a4a] rounded flex items-center justify-center text-4xl">🧍</div>
+              <div className="aspect-square bg-[#2a2a4a] rounded flex items-center justify-center text-4xl">👤</div>
             </div>
-          </div>
-
-          {/* Status Bar */}
-          <div className="h-10 border-t border-gray-800 flex items-center justify-between px-4 text-xs text-gray-500">
-            <div className="flex items-center gap-4">
-              <span>Style: <span className="text-purple-400 capitalize">{avatar.style}</span></span>
-              {avatar.style !== 'animal' && (
-                <span>Gender: <span className="text-purple-400 capitalize">{avatar.gender}</span></span>
-              )}
-              {avatar.style === 'animal' && avatar.animal && (
-                <span>Type: <span className="text-purple-400 capitalize">{avatar.animal.breed}</span></span>
-              )}
+            
+            {/* Current stats */}
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Muscle</span>
+                <span>{avatar.macro.muscle}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Weight</span>
+                <span>{avatar.macro.weight}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Height</span>
+                <span>{avatar.macro.height}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">African</span>
+                <span>{avatar.macro.african}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Asian</span>
+                <span>{avatar.macro.asian}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Caucasian</span>
+                <span>{avatar.macro.caucasian}%</span>
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-              <span>Drag to rotate • Scroll to zoom • Shift+drag to pan</span>
+
+            {/* Clothing equipped */}
+            <div className="mt-4">
+              <h4 className="text-xs font-semibold text-gray-400 mb-2">Equipped</h4>
+              <div className="flex flex-wrap gap-1">
+                {avatar.clothing.map((c) => (
+                  <span key={c} className="px-2 py-1 bg-[#2a2a4a] rounded text-xs">{c}</span>
+                ))}
+                {avatar.hair && <span className="px-2 py-1 bg-[#2a2a4a] rounded text-xs">{avatar.hair}</span>}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Custom Scrollbar Styles */}
+      {/* Custom scrollbar styles */}
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: #1a1a1a;
-          border-radius: 3px;
+          background: #16162a;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #4a4a4a;
+          background: #3a3a5a;
           border-radius: 3px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #5a5a5a;
+          background: #4a4a6a;
         }
       `}</style>
     </div>

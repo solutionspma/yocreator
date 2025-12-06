@@ -2,577 +2,321 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // ============================================
-// OMNI-AVATAR ENGINE - STATE MANAGEMENT
+// MAKEHUMAN-STYLE AVATAR ENGINE - STATE
 // ============================================
 
-export type AvatarStyle = 'realistic' | 'stylized' | 'anime' | 'cartoon' | 'animal';
-export type Gender = 'male' | 'female' | 'neutral';
-export type AnimalType = 'dog' | 'cat' | 'wolf' | 'fox' | 'custom';
+export type MainTab = 'modelling' | 'geometries' | 'materials' | 'pose' | 'rendering' | 'settings' | 'export';
+export type ModellingTab = 'main' | 'gender' | 'face' | 'torso' | 'arms' | 'legs' | 'random' | 'custom' | 'measure';
+export type GeometriesTab = 'clothes' | 'eyes' | 'hair' | 'teeth' | 'eyebrows' | 'eyelashes';
 
-// Body Morphs
-export interface BodyMorphs {
-  height: number;        // 0-100 → maps to 4'8" - 7'2"
-  weight: number;        // 0-100 → maps to 90lbs - 400lbs
-  muscleDefinition: number;
-  fatDistribution: number;
-  shoulderWidth: number;
-  hipWidth: number;
-  armLength: number;
-  legLength: number;
-  neckLength: number;
-  torsoLength: number;
+// Macro sliders (Main tab)
+export interface MacroMorphs {
+  gender: number;      // 0 = female, 100 = male
+  age: number;         // 0 = baby, 50 = adult, 100 = elderly
+  muscle: number;      // 0-100
+  weight: number;      // 0-100
+  height: number;      // 0-100
+  proportions: number; // 0-100
+  african: number;     // 0-100
+  asian: number;       // 0-100
+  caucasian: number;   // 0-100
 }
 
-// Face Morphs
+// Face morphs
 export interface FaceMorphs {
-  faceWidth: number;
-  faceLength: number;
-  jawWidth: number;
-  jawHeight: number;
-  chinWidth: number;
-  chinLength: number;
-  cheekboneHeight: number;
-  cheekboneWidth: number;
-  eyeSize: number;
-  eyeSpacing: number;
-  eyeHeight: number;
-  eyeTilt: number;
-  noseWidth: number;
-  noseLength: number;
-  noseBridge: number;
-  nostrilSize: number;
-  lipWidth: number;
-  lipFullnessUpper: number;
-  lipFullnessLower: number;
-  earSize: number;
-  earAngle: number;
-  browHeight: number;
-  browThickness: number;
-  foreheadHeight: number;
-  foreheadWidth: number;
+  headWidth: number; headHeight: number; headDepth: number;
+  foreheadHeight: number; foreheadWidth: number; foreheadProtrusion: number;
+  eyeSize: number; eyeSpacing: number; eyeHeight: number; eyeDepth: number; eyeAngle: number;
+  browHeight: number; browProtrusion: number; browAngle: number;
+  noseWidth: number; noseLength: number; noseBridge: number; noseProtrusion: number;
+  nostrilWidth: number; nostrilHeight: number; noseTip: number;
+  mouthWidth: number; mouthHeight: number; lipUpperFullness: number; lipLowerFullness: number; mouthProtrusion: number;
+  cheekboneWidth: number; cheekboneHeight: number; cheekFullness: number;
+  jawWidth: number; jawHeight: number; jawAngle: number;
+  chinWidth: number; chinHeight: number; chinProtrusion: number;
+  earSize: number; earAngle: number; earHeight: number;
+  neckWidth: number; neckLength: number;
 }
 
-// Hair Config
-export interface HairConfig {
-  style: string;
-  color: string;
-  secondaryColor: string;
-  length: number;
-  volume: number;
-  texture: 'straight' | 'wavy' | 'curly' | 'coily' | 'locs' | 'braids';
+// Torso morphs
+export interface TorsoMorphs {
+  shoulderWidth: number; shoulderHeight: number;
+  chestWidth: number; chestDepth: number; chestHeight: number; bustSize: number;
+  waistWidth: number; waistHeight: number;
+  hipWidth: number; hipHeight: number;
+  buttockSize: number; buttockProtrusion: number;
+  stomachSize: number; backCurvature: number;
 }
 
-// Facial Hair Config
-export interface FacialHairConfig {
-  style: string;
-  color: string;
-  density: number;
-  length: number;
+// Arms morphs
+export interface ArmsMorphs {
+  armLength: number; upperArmWidth: number; forearmWidth: number; wristWidth: number;
+  handSize: number; fingerLength: number;
+  shoulderMuscle: number; bicepSize: number; tricepSize: number;
 }
 
-// Clothing Config
-export interface ClothingConfig {
-  top: {
-    style: string;
-    primaryColor: string;
-    secondaryColor: string;
-    material: string;
-  };
-  bottom: {
-    style: string;
-    primaryColor: string;
-    secondaryColor: string;
-    material: string;
-  };
-  shoes: {
-    style: string;
-    primaryColor: string;
-    secondaryColor: string;
-  };
-  outerwear: {
-    style: string;
-    primaryColor: string;
-    secondaryColor: string;
-  } | null;
+// Legs morphs
+export interface LegsMorphs {
+  legLength: number; upperLegWidth: number; lowerLegWidth: number; ankleWidth: number;
+  footSize: number; toeLength: number;
+  thighGap: number; calfSize: number; gluteSize: number;
 }
 
-// Accessories
-export interface AccessoriesConfig {
-  glasses: string | null;
-  hat: string | null;
-  earrings: string | null;
-  necklace: string | null;
-  watch: string | null;
-  rings: string[];
-  other: string[];
-}
-
-// Animal Morphs
-export interface AnimalMorphs {
-  type: AnimalType;
-  breed: string;
-  size: number;
-  earSize: number;
-  earPosition: number;
-  snoutLength: number;
-  tailLength: number;
-  tailCurl: number;
-  legLength: number;
-  bodyLength: number;
-  furLength: number;
-  furColor: string;
-  furPattern: string;
-  eyeColor: string;
-}
-
-// Skin/Material Config
-export interface SkinConfig {
-  tone: string;
-  undertone: 'warm' | 'neutral' | 'cool';
-  freckles: number;
-  blemishes: number;
-  wrinkles: number;
-  scars: string[];
-  tattoos: string[];
-  makeup: {
-    foundation: number;
-    eyeshadow: string | null;
-    lipstick: string | null;
-    blush: number;
-    eyeliner: number;
-  };
-}
-
-// Animation State
-export interface AnimationState {
-  currentAnimation: string;
-  animationSpeed: number;
-  isPlaying: boolean;
-  availableAnimations: string[];
-}
-
-// Face Scan Data
-export interface FaceScanData {
-  landmarks: number[][] | null;
-  textureUrl: string | null;
-  meshUrl: string | null;
-  confidence: number;
-}
-
-// Complete Avatar State
-export interface AvatarState {
-  // Meta
+// Clothing item
+export interface ClothingItem {
   id: string;
   name: string;
-  style: AvatarStyle;
-  gender: Gender;
-  createdAt: string;
-  updatedAt: string;
-
-  // Human Morphs
-  body: BodyMorphs;
-  face: FaceMorphs;
-  skin: SkinConfig;
-  hair: HairConfig;
-  facialHair: FacialHairConfig;
-  clothing: ClothingConfig;
-  accessories: AccessoriesConfig;
-
-  // Animal (if style === 'animal')
-  animal: AnimalMorphs | null;
-
-  // Face Scan
-  faceScan: FaceScanData | null;
-
-  // Animation
-  animation: AnimationState;
-
-  // Loaded Assets
-  loadedModelUrl: string | null;
-  customMeshUrl: string | null;
+  category: 'tops' | 'bottoms' | 'shoes' | 'fullbody' | 'accessories';
+  thumbnail: string;
 }
 
-// Default Values
-export const defaultBodyMorphs: BodyMorphs = {
-  height: 50,
-  weight: 50,
-  muscleDefinition: 50,
-  fatDistribution: 50,
-  shoulderWidth: 50,
-  hipWidth: 50,
-  armLength: 50,
-  legLength: 50,
-  neckLength: 50,
-  torsoLength: 50,
+// Materials
+export interface MaterialSettings {
+  skinTone: string;
+  skinTexture: 'smooth' | 'freckled' | 'aged' | 'scarred';
+  eyeColor: string;
+  hairColor: string;
+  subsurfaceScattering: number;
+  roughness: number;
+}
+
+// Avatar state
+export interface AvatarState {
+  id: string;
+  name: string;
+  macro: MacroMorphs;
+  face: FaceMorphs;
+  torso: TorsoMorphs;
+  arms: ArmsMorphs;
+  legs: LegsMorphs;
+  materials: MaterialSettings;
+  clothing: string[];
+  hair: string | null;
+  pose: string;
+}
+
+// UI State
+export interface UIState {
+  mainTab: MainTab;
+  modellingTab: ModellingTab;
+  geometriesTab: GeometriesTab;
+  selectedCategory: string | null;
+  showWireframe: boolean;
+  showSkeleton: boolean;
+  cameraView: 'front' | 'side' | 'back' | 'face' | 'custom';
+  zoom: number;
+}
+
+// Defaults
+export const defaultMacro: MacroMorphs = {
+  gender: 50, age: 25, muscle: 50, weight: 100, height: 50,
+  proportions: 50, african: 0, asian: 0, caucasian: 100,
 };
 
-export const defaultFaceMorphs: FaceMorphs = {
-  faceWidth: 50,
-  faceLength: 50,
-  jawWidth: 50,
-  jawHeight: 50,
-  chinWidth: 50,
-  chinLength: 50,
-  cheekboneHeight: 50,
-  cheekboneWidth: 50,
-  eyeSize: 50,
-  eyeSpacing: 50,
-  eyeHeight: 50,
-  eyeTilt: 50,
-  noseWidth: 50,
-  noseLength: 50,
-  noseBridge: 50,
-  nostrilSize: 50,
-  lipWidth: 50,
-  lipFullnessUpper: 50,
-  lipFullnessLower: 50,
-  earSize: 50,
-  earAngle: 50,
-  browHeight: 50,
-  browThickness: 50,
-  foreheadHeight: 50,
-  foreheadWidth: 50,
+export const defaultFace: FaceMorphs = {
+  headWidth: 50, headHeight: 50, headDepth: 50,
+  foreheadHeight: 50, foreheadWidth: 50, foreheadProtrusion: 50,
+  eyeSize: 50, eyeSpacing: 50, eyeHeight: 50, eyeDepth: 50, eyeAngle: 50,
+  browHeight: 50, browProtrusion: 50, browAngle: 50,
+  noseWidth: 50, noseLength: 50, noseBridge: 50, noseProtrusion: 50,
+  nostrilWidth: 50, nostrilHeight: 50, noseTip: 50,
+  mouthWidth: 50, mouthHeight: 50, lipUpperFullness: 50, lipLowerFullness: 50, mouthProtrusion: 50,
+  cheekboneWidth: 50, cheekboneHeight: 50, cheekFullness: 50,
+  jawWidth: 50, jawHeight: 50, jawAngle: 50,
+  chinWidth: 50, chinHeight: 50, chinProtrusion: 50,
+  earSize: 50, earAngle: 50, earHeight: 50,
+  neckWidth: 50, neckLength: 50,
 };
 
-export const defaultSkinConfig: SkinConfig = {
-  tone: '#8D5524',
-  undertone: 'warm',
-  freckles: 0,
-  blemishes: 0,
-  wrinkles: 0,
-  scars: [],
-  tattoos: [],
-  makeup: {
-    foundation: 0,
-    eyeshadow: null,
-    lipstick: null,
-    blush: 0,
-    eyeliner: 0,
-  },
+export const defaultTorso: TorsoMorphs = {
+  shoulderWidth: 50, shoulderHeight: 50,
+  chestWidth: 50, chestDepth: 50, chestHeight: 50, bustSize: 50,
+  waistWidth: 50, waistHeight: 50, hipWidth: 50, hipHeight: 50,
+  buttockSize: 50, buttockProtrusion: 50, stomachSize: 50, backCurvature: 50,
 };
 
-export const defaultHairConfig: HairConfig = {
-  style: 'fade',
-  color: '#1a1a1a',
-  secondaryColor: '#1a1a1a',
-  length: 30,
-  volume: 50,
-  texture: 'coily',
+export const defaultArms: ArmsMorphs = {
+  armLength: 50, upperArmWidth: 50, forearmWidth: 50, wristWidth: 50,
+  handSize: 50, fingerLength: 50, shoulderMuscle: 50, bicepSize: 50, tricepSize: 50,
 };
 
-export const defaultFacialHairConfig: FacialHairConfig = {
-  style: 'goatee',
-  color: '#1a1a1a',
-  density: 70,
-  length: 30,
+export const defaultLegs: LegsMorphs = {
+  legLength: 50, upperLegWidth: 50, lowerLegWidth: 50, ankleWidth: 50,
+  footSize: 50, toeLength: 50, thighGap: 50, calfSize: 50, gluteSize: 50,
 };
 
-export const defaultClothingConfig: ClothingConfig = {
-  top: { style: 'blazer', primaryColor: '#1e3a5f', secondaryColor: '#ffffff', material: 'cotton' },
-  bottom: { style: 'dress_pants', primaryColor: '#1a1a1a', secondaryColor: '#1a1a1a', material: 'wool' },
-  shoes: { style: 'oxford', primaryColor: '#2d1f1a', secondaryColor: '#1a1a1a' },
-  outerwear: null,
+export const defaultMaterials: MaterialSettings = {
+  skinTone: '#C68642',
+  skinTexture: 'smooth',
+  eyeColor: '#634e34',
+  hairColor: '#2C1810',
+  subsurfaceScattering: 50,
+  roughness: 50,
 };
 
-export const defaultAccessoriesConfig: AccessoriesConfig = {
-  glasses: 'reading',
-  hat: null,
-  earrings: null,
-  necklace: null,
-  watch: 'silver',
-  rings: [],
-  other: [],
-};
+// Clothing catalog
+export const clothingCatalog: ClothingItem[] = [
+  { id: 'jeans01', name: 'Jeans', category: 'bottoms', thumbnail: '👖' },
+  { id: 'shirt01', name: 'T-Shirt', category: 'tops', thumbnail: '👕' },
+  { id: 'shoes01', name: 'Sneakers', category: 'shoes', thumbnail: '👟' },
+  { id: 'shoes02', name: 'Dress Shoes', category: 'shoes', thumbnail: '👞' },
+  { id: 'short01', name: 'Shorts', category: 'bottoms', thumbnail: '🩳' },
+  { id: 'suit01', name: 'Suit Jacket', category: 'tops', thumbnail: '🤵' },
+  { id: 'suit01res', name: 'Suit Pants', category: 'bottoms', thumbnail: '👔' },
+  { id: 'tshirt02', name: 'Polo', category: 'tops', thumbnail: '👕' },
+  { id: 'hoodie01', name: 'Hoodie', category: 'tops', thumbnail: '🧥' },
+  { id: 'dress01', name: 'Dress', category: 'fullbody', thumbnail: '👗' },
+  { id: 'jacket01', name: 'Jacket', category: 'tops', thumbnail: '🧥' },
+  { id: 'worksuit', name: 'Work Suit', category: 'fullbody', thumbnail: '🧑‍💼' },
+];
 
-export const defaultAnimalMorphs: AnimalMorphs = {
-  type: 'dog',
-  breed: 'chihuahua',
-  size: 20,
-  earSize: 80,
-  earPosition: 70,
-  snoutLength: 30,
-  tailLength: 50,
-  tailCurl: 60,
-  legLength: 30,
-  bodyLength: 40,
-  furLength: 20,
-  furColor: '#d4a574',
-  furPattern: 'solid',
-  eyeColor: '#3d2314',
-};
+// Hair catalog
+export const hairCatalog = [
+  { id: 'bald', name: 'Bald', thumbnail: '👨‍🦲' },
+  { id: 'short01', name: 'Short', thumbnail: '👨' },
+  { id: 'medium01', name: 'Medium', thumbnail: '🧑' },
+  { id: 'long01', name: 'Long', thumbnail: '👩' },
+  { id: 'curly01', name: 'Curly', thumbnail: '🧑‍🦱' },
+  { id: 'afro01', name: 'Afro', thumbnail: '👨‍🦱' },
+  { id: 'ponytail01', name: 'Ponytail', thumbnail: '👧' },
+  { id: 'mohawk01', name: 'Mohawk', thumbnail: '🤘' },
+];
 
-export const defaultAnimationState: AnimationState = {
-  currentAnimation: 'idle',
-  animationSpeed: 1,
-  isPlaying: true,
-  availableAnimations: ['idle', 'walk', 'run', 'wave', 'talk', 'sit'],
-};
+// Skin tone presets
+export const skinTonePresets = [
+  { name: 'Pale', color: '#FFDFC4' },
+  { name: 'Fair', color: '#F0D5BE' },
+  { name: 'Light', color: '#EECEB3' },
+  { name: 'Medium Light', color: '#E0B594' },
+  { name: 'Medium', color: '#C68642' },
+  { name: 'Medium Dark', color: '#8D5524' },
+  { name: 'Dark', color: '#5C3317' },
+  { name: 'Deep', color: '#3C1810' },
+];
+
+// Eye color presets
+export const eyeColorPresets = [
+  { name: 'Brown', color: '#634e34' },
+  { name: 'Hazel', color: '#8E7618' },
+  { name: 'Amber', color: '#B5651D' },
+  { name: 'Green', color: '#3D8C4F' },
+  { name: 'Blue', color: '#4169E1' },
+  { name: 'Gray', color: '#778899' },
+];
 
 // Create default avatar
 export const createDefaultAvatar = (): AvatarState => ({
   id: `avatar_${Date.now()}`,
-  name: 'New Avatar',
-  style: 'realistic',
-  gender: 'male',
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  body: { ...defaultBodyMorphs },
-  face: { ...defaultFaceMorphs },
-  skin: { ...defaultSkinConfig },
-  hair: { ...defaultHairConfig },
-  facialHair: { ...defaultFacialHairConfig },
-  clothing: { ...defaultClothingConfig },
-  accessories: { ...defaultAccessoriesConfig },
-  animal: null,
-  faceScan: null,
-  animation: { ...defaultAnimationState },
-  loadedModelUrl: null,
-  customMeshUrl: null,
+  name: 'Untitled',
+  macro: { ...defaultMacro },
+  face: { ...defaultFace },
+  torso: { ...defaultTorso },
+  arms: { ...defaultArms },
+  legs: { ...defaultLegs },
+  materials: { ...defaultMaterials },
+  clothing: ['shirt01', 'jeans01', 'shoes01'],
+  hair: 'short01',
+  pose: 'tpose',
 });
 
-// UI State
-export interface UIState {
-  activeTab: 'body' | 'face' | 'hair' | 'clothing' | 'accessories' | 'animals' | 'facescan' | 'export';
-  isLoading: boolean;
-  isSaving: boolean;
-  showExportModal: boolean;
-  showLoadModal: boolean;
-  cameraPosition: [number, number, number];
-  cameraTarget: [number, number, number];
-  viewMode: 'full' | 'head' | 'upper' | 'lower';
-  showWireframe: boolean;
-  showSkeleton: boolean;
-  autoRotate: boolean;
-}
-
-// Store Interface
+// Store interface
 interface AvatarStore {
-  // Current Avatar
   avatar: AvatarState;
-  
-  // Saved Avatars
-  savedAvatars: AvatarState[];
-  
-  // UI State
   ui: UIState;
-  
-  // Actions - Avatar
-  setAvatar: (avatar: AvatarState) => void;
-  updateBody: (key: keyof BodyMorphs, value: number) => void;
-  updateFace: (key: keyof FaceMorphs, value: number) => void;
-  updateSkin: (updates: Partial<SkinConfig>) => void;
-  updateHair: (updates: Partial<HairConfig>) => void;
-  updateFacialHair: (updates: Partial<FacialHairConfig>) => void;
-  updateClothing: (category: keyof ClothingConfig, updates: any) => void;
-  updateAccessories: (updates: Partial<AccessoriesConfig>) => void;
-  updateAnimal: (updates: Partial<AnimalMorphs>) => void;
-  setStyle: (style: AvatarStyle) => void;
-  setGender: (gender: Gender) => void;
+  savedAvatars: AvatarState[];
+  setMacro: (key: keyof MacroMorphs, value: number) => void;
+  setFace: (key: keyof FaceMorphs, value: number) => void;
+  setTorso: (key: keyof TorsoMorphs, value: number) => void;
+  setArms: (key: keyof ArmsMorphs, value: number) => void;
+  setLegs: (key: keyof LegsMorphs, value: number) => void;
+  setMaterial: (key: keyof MaterialSettings, value: any) => void;
+  toggleClothing: (id: string) => void;
+  setHair: (id: string | null) => void;
+  setMainTab: (tab: MainTab) => void;
+  setModellingTab: (tab: ModellingTab) => void;
+  setGeometriesTab: (tab: GeometriesTab) => void;
+  setCategory: (cat: string | null) => void;
+  toggleWireframe: () => void;
+  toggleSkeleton: () => void;
+  setCameraView: (view: UIState['cameraView']) => void;
+  setZoom: (zoom: number) => void;
+  randomize: () => void;
+  reset: () => void;
   setName: (name: string) => void;
-  setFaceScan: (data: FaceScanData | null) => void;
-  resetAvatar: () => void;
-  
-  // Actions - Saved Avatars
   saveAvatar: () => void;
   loadAvatar: (id: string) => void;
   deleteAvatar: (id: string) => void;
-  
-  // Actions - UI
-  setActiveTab: (tab: UIState['activeTab']) => void;
-  setLoading: (loading: boolean) => void;
-  setViewMode: (mode: UIState['viewMode']) => void;
-  toggleWireframe: () => void;
-  toggleSkeleton: () => void;
-  toggleAutoRotate: () => void;
-  setCameraPosition: (pos: [number, number, number]) => void;
-  setShowExportModal: (show: boolean) => void;
-  setShowLoadModal: (show: boolean) => void;
 }
 
-// Create Store
 export const useAvatarStore = create<AvatarStore>()(
   persist(
     (set, get) => ({
       avatar: createDefaultAvatar(),
-      savedAvatars: [],
       ui: {
-        activeTab: 'body',
-        isLoading: false,
-        isSaving: false,
-        showExportModal: false,
-        showLoadModal: false,
-        cameraPosition: [0, 1.2, 2.5],
-        cameraTarget: [0, 1, 0],
-        viewMode: 'full',
+        mainTab: 'modelling',
+        modellingTab: 'main',
+        geometriesTab: 'clothes',
+        selectedCategory: 'Macro',
         showWireframe: false,
         showSkeleton: false,
-        autoRotate: false,
+        cameraView: 'front',
+        zoom: 1,
       },
+      savedAvatars: [],
 
-      // Avatar Actions
-      setAvatar: (avatar) => set({ avatar }),
+      setMacro: (key, value) => set((s) => ({ avatar: { ...s.avatar, macro: { ...s.avatar.macro, [key]: value } } })),
+      setFace: (key, value) => set((s) => ({ avatar: { ...s.avatar, face: { ...s.avatar.face, [key]: value } } })),
+      setTorso: (key, value) => set((s) => ({ avatar: { ...s.avatar, torso: { ...s.avatar.torso, [key]: value } } })),
+      setArms: (key, value) => set((s) => ({ avatar: { ...s.avatar, arms: { ...s.avatar.arms, [key]: value } } })),
+      setLegs: (key, value) => set((s) => ({ avatar: { ...s.avatar, legs: { ...s.avatar.legs, [key]: value } } })),
+      setMaterial: (key, value) => set((s) => ({ avatar: { ...s.avatar, materials: { ...s.avatar.materials, [key]: value } } })),
       
-      updateBody: (key, value) => set((state) => ({
-        avatar: {
-          ...state.avatar,
-          body: { ...state.avatar.body, [key]: value },
-          updatedAt: new Date().toISOString(),
-        }
-      })),
+      toggleClothing: (id) => set((s) => {
+        const c = s.avatar.clothing;
+        return { avatar: { ...s.avatar, clothing: c.includes(id) ? c.filter(x => x !== id) : [...c, id] } };
+      }),
+      
+      setHair: (id) => set((s) => ({ avatar: { ...s.avatar, hair: id } })),
+      
+      setMainTab: (mainTab) => set((s) => ({ ui: { ...s.ui, mainTab } })),
+      setModellingTab: (modellingTab) => set((s) => ({ ui: { ...s.ui, modellingTab } })),
+      setGeometriesTab: (geometriesTab) => set((s) => ({ ui: { ...s.ui, geometriesTab } })),
+      setCategory: (selectedCategory) => set((s) => ({ ui: { ...s.ui, selectedCategory } })),
+      toggleWireframe: () => set((s) => ({ ui: { ...s.ui, showWireframe: !s.ui.showWireframe } })),
+      toggleSkeleton: () => set((s) => ({ ui: { ...s.ui, showSkeleton: !s.ui.showSkeleton } })),
+      setCameraView: (cameraView) => set((s) => ({ ui: { ...s.ui, cameraView } })),
+      setZoom: (zoom) => set((s) => ({ ui: { ...s.ui, zoom } })),
 
-      updateFace: (key, value) => set((state) => ({
-        avatar: {
-          ...state.avatar,
-          face: { ...state.avatar.face, [key]: value },
-          updatedAt: new Date().toISOString(),
-        }
-      })),
-
-      updateSkin: (updates) => set((state) => ({
-        avatar: {
-          ...state.avatar,
-          skin: { ...state.avatar.skin, ...updates },
-          updatedAt: new Date().toISOString(),
-        }
-      })),
-
-      updateHair: (updates) => set((state) => ({
-        avatar: {
-          ...state.avatar,
-          hair: { ...state.avatar.hair, ...updates },
-          updatedAt: new Date().toISOString(),
-        }
-      })),
-
-      updateFacialHair: (updates) => set((state) => ({
-        avatar: {
-          ...state.avatar,
-          facialHair: { ...state.avatar.facialHair, ...updates },
-          updatedAt: new Date().toISOString(),
-        }
-      })),
-
-      updateClothing: (category, updates) => set((state) => ({
-        avatar: {
-          ...state.avatar,
-          clothing: {
-            ...state.avatar.clothing,
-            [category]: typeof state.avatar.clothing[category] === 'object' 
-              ? { ...state.avatar.clothing[category], ...updates }
-              : updates
-          },
-          updatedAt: new Date().toISOString(),
-        }
-      })),
-
-      updateAccessories: (updates) => set((state) => ({
-        avatar: {
-          ...state.avatar,
-          accessories: { ...state.avatar.accessories, ...updates },
-          updatedAt: new Date().toISOString(),
-        }
-      })),
-
-      updateAnimal: (updates) => set((state) => ({
-        avatar: {
-          ...state.avatar,
-          animal: state.avatar.animal 
-            ? { ...state.avatar.animal, ...updates }
-            : { ...defaultAnimalMorphs, ...updates },
-          updatedAt: new Date().toISOString(),
-        }
-      })),
-
-      setStyle: (style) => set((state) => ({
-        avatar: {
-          ...state.avatar,
-          style,
-          animal: style === 'animal' ? defaultAnimalMorphs : null,
-          updatedAt: new Date().toISOString(),
-        }
-      })),
-
-      setGender: (gender) => set((state) => ({
-        avatar: { ...state.avatar, gender, updatedAt: new Date().toISOString() }
-      })),
-
-      setName: (name) => set((state) => ({
-        avatar: { ...state.avatar, name, updatedAt: new Date().toISOString() }
-      })),
-
-      setFaceScan: (faceScan) => set((state) => ({
-        avatar: { ...state.avatar, faceScan, updatedAt: new Date().toISOString() }
-      })),
-
-      resetAvatar: () => set({ avatar: createDefaultAvatar() }),
-
-      // Saved Avatars Actions
-      saveAvatar: () => set((state) => {
-        const existing = state.savedAvatars.findIndex(a => a.id === state.avatar.id);
-        const updated = { ...state.avatar, updatedAt: new Date().toISOString() };
-        
-        if (existing >= 0) {
-          const newSaved = [...state.savedAvatars];
-          newSaved[existing] = updated;
-          return { savedAvatars: newSaved, avatar: updated };
-        }
-        
-        return { savedAvatars: [...state.savedAvatars, updated], avatar: updated };
+      randomize: () => set((s) => {
+        const r = () => Math.floor(Math.random() * 100);
+        return {
+          avatar: {
+            ...s.avatar,
+            macro: { gender: r(), age: 15 + Math.floor(Math.random() * 60), muscle: r(), weight: r(), height: r(), proportions: r(), african: r(), asian: r(), caucasian: r() },
+          }
+        };
       }),
 
-      loadAvatar: (id) => set((state) => {
-        const found = state.savedAvatars.find(a => a.id === id);
-        if (found) return { avatar: { ...found } };
-        return state;
+      reset: () => set({ avatar: createDefaultAvatar() }),
+      setName: (name) => set((s) => ({ avatar: { ...s.avatar, name } })),
+      
+      saveAvatar: () => set((s) => {
+        const idx = s.savedAvatars.findIndex(a => a.id === s.avatar.id);
+        if (idx >= 0) {
+          const arr = [...s.savedAvatars];
+          arr[idx] = { ...s.avatar };
+          return { savedAvatars: arr };
+        }
+        return { savedAvatars: [...s.savedAvatars, { ...s.avatar }] };
       }),
-
-      deleteAvatar: (id) => set((state) => ({
-        savedAvatars: state.savedAvatars.filter(a => a.id !== id)
-      })),
-
-      // UI Actions
-      setActiveTab: (activeTab) => set((state) => ({
-        ui: { ...state.ui, activeTab }
-      })),
-
-      setLoading: (isLoading) => set((state) => ({
-        ui: { ...state.ui, isLoading }
-      })),
-
-      setViewMode: (viewMode) => set((state) => ({
-        ui: { ...state.ui, viewMode }
-      })),
-
-      toggleWireframe: () => set((state) => ({
-        ui: { ...state.ui, showWireframe: !state.ui.showWireframe }
-      })),
-
-      toggleSkeleton: () => set((state) => ({
-        ui: { ...state.ui, showSkeleton: !state.ui.showSkeleton }
-      })),
-
-      toggleAutoRotate: () => set((state) => ({
-        ui: { ...state.ui, autoRotate: !state.ui.autoRotate }
-      })),
-
-      setCameraPosition: (cameraPosition) => set((state) => ({
-        ui: { ...state.ui, cameraPosition }
-      })),
-
-      setShowExportModal: (showExportModal) => set((state) => ({
-        ui: { ...state.ui, showExportModal }
-      })),
-
-      setShowLoadModal: (showLoadModal) => set((state) => ({
-        ui: { ...state.ui, showLoadModal }
-      })),
+      
+      loadAvatar: (id) => set((s) => {
+        const found = s.savedAvatars.find(a => a.id === id);
+        return found ? { avatar: { ...found } } : s;
+      }),
+      
+      deleteAvatar: (id) => set((s) => ({ savedAvatars: s.savedAvatars.filter(a => a.id !== id) })),
     }),
-    {
-      name: 'yocreator-avatar-engine',
-      partialize: (state) => ({
-        avatar: state.avatar,
-        savedAvatars: state.savedAvatars,
-      }),
-    }
+    { name: 'yocreator-makehuman-avatar', partialize: (s) => ({ avatar: s.avatar, savedAvatars: s.savedAvatars }) }
   )
 );
