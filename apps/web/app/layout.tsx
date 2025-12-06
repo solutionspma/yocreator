@@ -1,3 +1,4 @@
+import './globals.css';
 import ClientLayout from "../components/ClientLayout";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -7,17 +8,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>YOcreator Studio</title>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
-      <body style={{ 
-        margin: 0, 
-        padding: 0, 
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-        backgroundColor: '#0f0f0f',
-        color: '#ffffff',
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
+      <body className="min-h-screen flex flex-col">
         <ClientLayout>
           {children}
         </ClientLayout>
