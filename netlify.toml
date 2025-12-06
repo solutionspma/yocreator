@@ -3,11 +3,8 @@
   command = "npm install && npm run build"
   publish = "out"
 
-# Redirect SPA routes to index
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# Let Next.js handle routing - no catch-all redirect needed for static export
+# Static files served directly
 
 [[headers]]
   for = "/*"

@@ -30,7 +30,7 @@ export default function NavBar() {
   const navLinks = [
     { href: "/studio", label: "Studio" },
     { href: "/studio/voice", label: "Voice" },
-    { href: "/studio/avatar", label: "Avatar" },
+    { href: "/studio/avatarEngine", label: "Avatar" },
     { href: "/studio/video", label: "Video" },
     { href: "/studio/projects", label: "Projects" },
     { href: "/gallery", label: "Gallery" },
