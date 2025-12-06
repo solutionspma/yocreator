@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
+import { useAvatarStore } from '../store';
 
 export default function RenderingPanel() {
-  const [resolution, setResolution] = useState('1080p');
-  const [format, setFormat] = useState('png');
-  const [background, setBackground] = useState('transparent');
-  const [shadows, setShadows] = useState(true);
-  const [antiAliasing, setAntiAliasing] = useState('4x');
-  const [renderMode, setRenderMode] = useState('turntable');
+  const { render, setRender } = useAvatarStore();
+
+  const handleRender = () => {
+    // Trigger render - this could export an image or start an animation
+    console.log('Rendering with settings:', render);
+    alert(`Rendering at ${render.resolution} as ${render.format.toUpperCase()} with ${render.background} background`);
+  };
 
   return (
     <div className="p-4">
@@ -21,9 +23,9 @@ export default function RenderingPanel() {
           {['720p', '1080p', '2K', '4K'].map((res) => (
             <button
               key={res}
-              onClick={() => setResolution(res)}
+              onClick={() => setRender({ resolution: res })}
               className={`py-2 rounded-lg text-sm transition ${
-                resolution === res
+                render.resolution === res
                   ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
                   : 'bg-[#2a2a4a] text-gray-400 hover:bg-[#3a3a5a]'
               }`}
@@ -37,14 +39,16 @@ export default function RenderingPanel() {
             type="number"
             placeholder="Width"
             className="flex-1 px-3 py-2 bg-[#2a2a4a] border border-[#3a3a5a] rounded text-sm"
-            defaultValue={1920}
+            value={render.width}
+            onChange={(e) => setRender({ width: parseInt(e.target.value) || 1920 })}
           />
           <span className="text-gray-400 self-center">×</span>
           <input
             type="number"
             placeholder="Height"
             className="flex-1 px-3 py-2 bg-[#2a2a4a] border border-[#3a3a5a] rounded text-sm"
-            defaultValue={1080}
+            value={render.height}
+            onChange={(e) => setRender({ height: parseInt(e.target.value) || 1080 })}
           />
         </div>
       </div>
@@ -58,9 +62,9 @@ export default function RenderingPanel() {
           {['png', 'jpg', 'webp'].map((fmt) => (
             <button
               key={fmt}
-              onClick={() => setFormat(fmt)}
+              onClick={() => setRender({ format: fmt })}
               className={`py-2 rounded-lg text-sm uppercase transition ${
-                format === fmt
+                render.format === fmt
                   ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
                   : 'bg-[#2a2a4a] text-gray-400 hover:bg-[#3a3a5a]'
               }`}
@@ -87,9 +91,9 @@ export default function RenderingPanel() {
           ].map((bg) => (
             <button
               key={bg.id}
-              onClick={() => setBackground(bg.id)}
+              onClick={() => setRender({ background: bg.id })}
               className={`py-2 rounded-lg text-sm transition flex items-center justify-center gap-2 ${
-                background === bg.id
+                render.background === bg.id
                   ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
                   : 'bg-[#2a2a4a] text-gray-400 hover:bg-[#3a3a5a]'
               }`}
@@ -110,10 +114,10 @@ export default function RenderingPanel() {
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm text-gray-400">Shadows</span>
           <button
-            onClick={() => setShadows(!shadows)}
-            className={`w-12 h-6 rounded-full transition ${shadows ? 'bg-cyan-500' : 'bg-[#3a3a5a]'}`}
+            onClick={() => setRender({ shadows: !render.shadows })}
+            className={`w-12 h-6 rounded-full transition ${render.shadows ? 'bg-cyan-500' : 'bg-[#3a3a5a]'}`}
           >
-            <div className={`w-5 h-5 bg-white rounded-full transform transition ${shadows ? 'translate-x-6' : 'translate-x-0.5'}`} />
+            <div className={`w-5 h-5 bg-white rounded-full transform transition ${render.shadows ? 'translate-x-6' : 'translate-x-0.5'}`} />
           </button>
         </div>
 
@@ -123,9 +127,9 @@ export default function RenderingPanel() {
             {['Off', '2x', '4x', '8x'].map((aa) => (
               <button
                 key={aa}
-                onClick={() => setAntiAliasing(aa)}
+                onClick={() => setRender({ antiAliasing: aa })}
                 className={`py-1 rounded text-xs transition ${
-                  antiAliasing === aa
+                  render.antiAliasing === aa
                     ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
                     : 'bg-[#2a2a4a] text-gray-400 hover:bg-[#3a3a5a]'
                 }`}
@@ -151,9 +155,9 @@ export default function RenderingPanel() {
           ].map((mode) => (
             <button
               key={mode.id}
-              onClick={() => setRenderMode(mode.id)}
+              onClick={() => setRender({ mode: mode.id })}
               className={`py-3 rounded-lg text-sm transition flex flex-col items-center gap-1 ${
-                renderMode === mode.id
+                render.mode === mode.id
                   ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
                   : 'bg-[#2a2a4a] text-gray-400 hover:bg-[#3a3a5a]'
               }`}
@@ -166,7 +170,10 @@ export default function RenderingPanel() {
       </div>
 
       {/* Render Button */}
-      <button className="w-full py-4 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 rounded-lg font-bold text-lg transition">
+      <button 
+        onClick={handleRender}
+        className="w-full py-4 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 rounded-lg font-bold text-lg transition"
+      >
         🚀 Render
       </button>
     </div>

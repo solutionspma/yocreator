@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
+import { useAvatarStore } from '../store';
 
 // Pose presets
 const posePresets = [
@@ -33,9 +34,7 @@ const animationPresets = [
 ];
 
 export default function PosePanel() {
-  const [selectedPose, setSelectedPose] = useState('tpose');
-  const [selectedAnimation, setSelectedAnimation] = useState<string | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const { pose, setPose } = useAvatarStore();
 
   return (
     <div className="p-4">
@@ -45,18 +44,18 @@ export default function PosePanel() {
           <span>🧍</span> Poses
         </h3>
         <div className="grid grid-cols-3 gap-2">
-          {posePresets.map((pose) => (
+          {posePresets.map((preset) => (
             <button
-              key={pose.id}
-              onClick={() => setSelectedPose(pose.id)}
+              key={preset.id}
+              onClick={() => setPose({ preset: preset.id, animation: null, isPlaying: false })}
               className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
-                selectedPose === pose.id
+                pose.preset === preset.id
                   ? 'border-cyan-400 bg-cyan-400/20'
                   : 'border-[#3a3a5a] bg-[#2a2a4a] hover:border-[#4a4a6a]'
               }`}
             >
-              <span className="text-2xl">{pose.icon}</span>
-              <span className="text-xs text-gray-300">{pose.name}</span>
+              <span className="text-2xl">{preset.icon}</span>
+              <span className="text-xs text-gray-300">{preset.name}</span>
             </button>
           ))}
         </div>
@@ -71,9 +70,9 @@ export default function PosePanel() {
           {animationPresets.map((anim) => (
             <button
               key={anim.id}
-              onClick={() => setSelectedAnimation(anim.id)}
+              onClick={() => setPose({ animation: anim.id })}
               className={`p-3 rounded-lg border-2 transition-all flex items-center gap-2 ${
-                selectedAnimation === anim.id
+                pose.animation === anim.id
                   ? 'border-purple-400 bg-purple-400/20'
                   : 'border-[#3a3a5a] bg-[#2a2a4a] hover:border-[#4a4a6a]'
               }`}
@@ -90,16 +89,19 @@ export default function PosePanel() {
         {/* Playback controls */}
         <div className="mt-4 flex gap-2">
           <button
-            onClick={() => setIsPlaying(!isPlaying)}
+            onClick={() => setPose({ isPlaying: !pose.isPlaying })}
             className={`flex-1 py-2 rounded-lg font-medium transition ${
-              isPlaying
+              pose.isPlaying
                 ? 'bg-red-500/20 text-red-400 border border-red-500/50'
                 : 'bg-green-500/20 text-green-400 border border-green-500/50'
             }`}
           >
-            {isPlaying ? '⏹️ Stop' : '▶️ Play'}
+            {pose.isPlaying ? '⏹️ Stop' : '▶️ Play'}
           </button>
-          <button className="px-4 py-2 bg-[#2a2a4a] rounded-lg hover:bg-[#3a3a5a] transition">
+          <button 
+            onClick={() => setPose({ animation: null, isPlaying: false })}
+            className="px-4 py-2 bg-[#2a2a4a] rounded-lg hover:bg-[#3a3a5a] transition"
+          >
             🔄
           </button>
         </div>

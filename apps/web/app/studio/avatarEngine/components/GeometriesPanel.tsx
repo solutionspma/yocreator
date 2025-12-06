@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useAvatarStore, clothingCatalog, hairCatalog, GeometriesTab, ClothingItem } from '../store';
+import { useAvatarStore, clothingCatalog, hairCatalog, eyeCatalog, teethCatalog, eyebrowCatalog, eyelashCatalog, GeometriesTab, ClothingItem } from '../store';
 
 // Geometries sub-tabs
 const geometriesTabs: { id: GeometriesTab; label: string; icon: string }[] = [
@@ -93,29 +93,24 @@ function HairPanel() {
 
 // Eyes panel
 function EyesPanel() {
-  const eyeTypes = [
-    { id: 'normal', name: 'Normal', thumbnail: '👁️' },
-    { id: 'anime', name: 'Anime', thumbnail: '🌸' },
-    { id: 'realistic', name: 'Realistic', thumbnail: '👀' },
-    { id: 'cartoon', name: 'Cartoon', thumbnail: '😃' },
-  ];
+  const { faceGeometry, setEyeType } = useAvatarStore();
 
   return (
     <div className="p-4">
       <h4 className="text-xs font-semibold text-gray-400 mb-3">Eye Types</h4>
       <div className="grid grid-cols-3 gap-2">
-        {eyeTypes.map((item) => (
+        {eyeCatalog.map((item) => (
           <ItemCard
             key={item.id}
             item={item}
-            isSelected={false}
-            onClick={() => {}}
+            isSelected={faceGeometry.eyeType === item.id}
+            onClick={() => setEyeType(item.id)}
           />
         ))}
       </div>
       
       <div className="mt-4 p-3 bg-[#2a2a4a] rounded-lg text-xs text-gray-400">
-        <p>💡 More eye styles coming soon!</p>
+        <p>👁️ Eye type affects 3D eye shape on avatar</p>
       </div>
     </div>
   );
@@ -123,23 +118,18 @@ function EyesPanel() {
 
 // Teeth panel
 function TeethPanel() {
-  const teethTypes = [
-    { id: 'normal', name: 'Normal', thumbnail: '🦷' },
-    { id: 'braces', name: 'Braces', thumbnail: '🔧' },
-    { id: 'vampire', name: 'Vampire', thumbnail: '🧛' },
-    { id: 'gold', name: 'Gold', thumbnail: '✨' },
-  ];
+  const { faceGeometry, setTeeth } = useAvatarStore();
 
   return (
     <div className="p-4">
       <h4 className="text-xs font-semibold text-gray-400 mb-3">Teeth Types</h4>
       <div className="grid grid-cols-3 gap-2">
-        {teethTypes.map((item) => (
+        {teethCatalog.map((item) => (
           <ItemCard
             key={item.id}
             item={item}
-            isSelected={false}
-            onClick={() => {}}
+            isSelected={faceGeometry.teethType === item.id}
+            onClick={() => setTeeth(item.id)}
           />
         ))}
       </div>
@@ -149,25 +139,18 @@ function TeethPanel() {
 
 // Eyebrows panel
 function EyebrowsPanel() {
-  const eyebrowTypes = [
-    { id: 'natural', name: 'Natural', thumbnail: '🤨' },
-    { id: 'thick', name: 'Thick', thumbnail: '😤' },
-    { id: 'thin', name: 'Thin', thumbnail: '🙂' },
-    { id: 'arched', name: 'Arched', thumbnail: '😏' },
-    { id: 'straight', name: 'Straight', thumbnail: '😐' },
-    { id: 'none', name: 'None', thumbnail: '🥚' },
-  ];
+  const { faceGeometry, setEyebrows } = useAvatarStore();
 
   return (
     <div className="p-4">
       <h4 className="text-xs font-semibold text-gray-400 mb-3">Eyebrow Styles</h4>
       <div className="grid grid-cols-3 gap-2">
-        {eyebrowTypes.map((item) => (
+        {eyebrowCatalog.map((item) => (
           <ItemCard
             key={item.id}
             item={item}
-            isSelected={false}
-            onClick={() => {}}
+            isSelected={faceGeometry.eyebrowType === item.id}
+            onClick={() => setEyebrows(item.id)}
           />
         ))}
       </div>
@@ -177,24 +160,18 @@ function EyebrowsPanel() {
 
 // Eyelashes panel
 function EyelashesPanel() {
-  const eyelashTypes = [
-    { id: 'natural', name: 'Natural', thumbnail: '👁️' },
-    { id: 'long', name: 'Long', thumbnail: '🦋' },
-    { id: 'thick', name: 'Thick', thumbnail: '🌟' },
-    { id: 'dramatic', name: 'Dramatic', thumbnail: '💃' },
-    { id: 'none', name: 'None', thumbnail: '⚪' },
-  ];
+  const { faceGeometry, setEyelashes } = useAvatarStore();
 
   return (
     <div className="p-4">
       <h4 className="text-xs font-semibold text-gray-400 mb-3">Eyelash Styles</h4>
       <div className="grid grid-cols-3 gap-2">
-        {eyelashTypes.map((item) => (
+        {eyelashCatalog.map((item) => (
           <ItemCard
             key={item.id}
             item={item}
-            isSelected={false}
-            onClick={() => {}}
+            isSelected={faceGeometry.eyelashType === item.id}
+            onClick={() => setEyelashes(item.id)}
           />
         ))}
       </div>

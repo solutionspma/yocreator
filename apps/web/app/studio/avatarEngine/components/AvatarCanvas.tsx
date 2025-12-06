@@ -355,7 +355,7 @@ function ScaledSphere({
 
 // Human body built with smooth geometry
 function RealisticHumanBody() {
-  const { avatar, ui } = useAvatarStore();
+  const { avatar, ui, faceGeometry } = useAvatarStore();
   const groupRef = useRef<THREE.Group>(null);
   
   // Calculate body dimensions from all sliders
@@ -486,26 +486,60 @@ function RealisticHumanBody() {
           material={skinMat}
         />
         
-        {/* Left Eye */}
-        <mesh position={[-body.eyeSpacing, 0.01, body.headDepth * 0.85]} material={eyeWhiteMat} castShadow>
+        {/* Left Eye - varies by eye type */}
+        <mesh 
+          position={[-body.eyeSpacing, 0.01, body.headDepth * 0.85]} 
+          material={eyeWhiteMat} 
+          scale={[
+            faceGeometry.eyeType === 'anime' ? 1.3 : faceGeometry.eyeType === 'cartoon' ? 1.2 : 1,
+            faceGeometry.eyeType === 'anime' ? 1.5 : faceGeometry.eyeType === 'cartoon' ? 1.3 : 1,
+            1
+          ]}
+          castShadow
+        >
           <sphereGeometry args={[body.eyeSize, 16, 16]} />
         </mesh>
-        <mesh position={[-body.eyeSpacing, 0.01, body.headDepth * 0.85 + body.eyeSize * 0.5]} material={irisMat}>
-          <sphereGeometry args={[body.eyeSize * 0.5, 16, 16]} />
+        <mesh 
+          position={[-body.eyeSpacing, 0.01, body.headDepth * 0.85 + body.eyeSize * 0.5]} 
+          material={irisMat}
+          scale={[
+            faceGeometry.eyeType === 'anime' ? 1.3 : faceGeometry.eyeType === 'cartoon' ? 1.2 : 1,
+            faceGeometry.eyeType === 'anime' ? 1.5 : faceGeometry.eyeType === 'cartoon' ? 1.3 : 1,
+            1
+          ]}
+        >
+          <sphereGeometry args={[body.eyeSize * (faceGeometry.eyeType === 'anime' ? 0.6 : 0.5), 16, 16]} />
         </mesh>
         <mesh position={[-body.eyeSpacing, 0.01, body.headDepth * 0.85 + body.eyeSize * 0.7]} material={pupilMat}>
-          <sphereGeometry args={[body.eyeSize * 0.25, 8, 8]} />
+          <sphereGeometry args={[body.eyeSize * (faceGeometry.eyeType === 'anime' ? 0.35 : 0.25), 8, 8]} />
         </mesh>
         
-        {/* Right Eye */}
-        <mesh position={[body.eyeSpacing, 0.01, body.headDepth * 0.85]} material={eyeWhiteMat} castShadow>
+        {/* Right Eye - varies by eye type */}
+        <mesh 
+          position={[body.eyeSpacing, 0.01, body.headDepth * 0.85]} 
+          material={eyeWhiteMat} 
+          scale={[
+            faceGeometry.eyeType === 'anime' ? 1.3 : faceGeometry.eyeType === 'cartoon' ? 1.2 : 1,
+            faceGeometry.eyeType === 'anime' ? 1.5 : faceGeometry.eyeType === 'cartoon' ? 1.3 : 1,
+            1
+          ]}
+          castShadow
+        >
           <sphereGeometry args={[body.eyeSize, 16, 16]} />
         </mesh>
-        <mesh position={[body.eyeSpacing, 0.01, body.headDepth * 0.85 + body.eyeSize * 0.5]} material={irisMat}>
-          <sphereGeometry args={[body.eyeSize * 0.5, 16, 16]} />
+        <mesh 
+          position={[body.eyeSpacing, 0.01, body.headDepth * 0.85 + body.eyeSize * 0.5]} 
+          material={irisMat}
+          scale={[
+            faceGeometry.eyeType === 'anime' ? 1.3 : faceGeometry.eyeType === 'cartoon' ? 1.2 : 1,
+            faceGeometry.eyeType === 'anime' ? 1.5 : faceGeometry.eyeType === 'cartoon' ? 1.3 : 1,
+            1
+          ]}
+        >
+          <sphereGeometry args={[body.eyeSize * (faceGeometry.eyeType === 'anime' ? 0.6 : 0.5), 16, 16]} />
         </mesh>
         <mesh position={[body.eyeSpacing, 0.01, body.headDepth * 0.85 + body.eyeSize * 0.7]} material={pupilMat}>
-          <sphereGeometry args={[body.eyeSize * 0.25, 8, 8]} />
+          <sphereGeometry args={[body.eyeSize * (faceGeometry.eyeType === 'anime' ? 0.35 : 0.25), 8, 8]} />
         </mesh>
         
         {/* Nose */}
@@ -521,6 +555,40 @@ function RealisticHumanBody() {
           <capsuleGeometry args={[0.004 * (1 + body.lipFullness), body.mouthWidth, 4, 8]} />
         </mesh>
         
+        {/* ===== TEETH ===== */}
+        {faceGeometry.teethType !== 'none' && (
+          <mesh 
+            position={[0, -0.058, body.headDepth * 0.82]} 
+            material={new THREE.MeshStandardMaterial({ 
+              color: faceGeometry.teethType === 'gold' ? '#FFD700' : '#FFFAFA',
+              roughness: faceGeometry.teethType === 'gold' ? 0.3 : 0.5,
+              metalness: faceGeometry.teethType === 'gold' ? 0.8 : 0
+            })}
+          >
+            <boxGeometry args={[body.mouthWidth * 1.5, 0.006, 0.008]} />
+          </mesh>
+        )}
+        {/* Vampire fangs */}
+        {faceGeometry.teethType === 'vampire' && (
+          <>
+            <mesh position={[-0.012, -0.06, body.headDepth * 0.85]} rotation={[Math.PI, 0, 0]}>
+              <coneGeometry args={[0.003, 0.012, 4]} />
+              <meshStandardMaterial color="#FFFAFA" />
+            </mesh>
+            <mesh position={[0.012, -0.06, body.headDepth * 0.85]} rotation={[Math.PI, 0, 0]}>
+              <coneGeometry args={[0.003, 0.012, 4]} />
+              <meshStandardMaterial color="#FFFAFA" />
+            </mesh>
+          </>
+        )}
+        {/* Braces */}
+        {faceGeometry.teethType === 'braces' && (
+          <mesh position={[0, -0.056, body.headDepth * 0.86]}>
+            <boxGeometry args={[body.mouthWidth * 1.6, 0.003, 0.003]} />
+            <meshStandardMaterial color="#A8A8A8" metalness={0.8} roughness={0.2} />
+          </mesh>
+        )}
+        
         {/* Ears */}
         <mesh position={[-body.headWidth * 0.95, 0, 0]} material={skinMat} scale={[0.4, 1, 0.6]} castShadow>
           <sphereGeometry args={[body.earSize, 8, 8]} />
@@ -528,6 +596,90 @@ function RealisticHumanBody() {
         <mesh position={[body.headWidth * 0.95, 0, 0]} material={skinMat} scale={[0.4, 1, 0.6]} castShadow>
           <sphereGeometry args={[body.earSize, 8, 8]} />
         </mesh>
+        
+        {/* ===== EYEBROWS ===== */}
+        {faceGeometry.eyebrowType !== 'none' && (
+          <>
+            {/* Left Eyebrow */}
+            <mesh 
+              position={[
+                -body.eyeSpacing, 
+                0.01 + body.eyeSize * 1.3, 
+                body.headDepth * 0.88
+              ]} 
+              rotation={[0.1, 0, faceGeometry.eyebrowType === 'arched' ? -0.15 : 0]}
+              material={hairMat} 
+              castShadow
+            >
+              <boxGeometry args={[
+                0.025 * (faceGeometry.eyebrowType === 'thick' ? 1.3 : faceGeometry.eyebrowType === 'thin' ? 0.8 : 1), 
+                0.004 * (faceGeometry.eyebrowType === 'thick' ? 1.5 : faceGeometry.eyebrowType === 'thin' ? 0.7 : 1), 
+                0.006
+              ]} />
+            </mesh>
+            {/* Right Eyebrow */}
+            <mesh 
+              position={[
+                body.eyeSpacing, 
+                0.01 + body.eyeSize * 1.3, 
+                body.headDepth * 0.88
+              ]} 
+              rotation={[0.1, 0, faceGeometry.eyebrowType === 'arched' ? 0.15 : 0]}
+              material={hairMat} 
+              castShadow
+            >
+              <boxGeometry args={[
+                0.025 * (faceGeometry.eyebrowType === 'thick' ? 1.3 : faceGeometry.eyebrowType === 'thin' ? 0.8 : 1), 
+                0.004 * (faceGeometry.eyebrowType === 'thick' ? 1.5 : faceGeometry.eyebrowType === 'thin' ? 0.7 : 1), 
+                0.006
+              ]} />
+            </mesh>
+          </>
+        )}
+        
+        {/* ===== EYELASHES ===== */}
+        {faceGeometry.eyelashType !== 'none' && (
+          <>
+            {/* Left Eye Lashes */}
+            {Array.from({ length: faceGeometry.eyelashType === 'dramatic' ? 8 : faceGeometry.eyelashType === 'long' ? 6 : 4 }).map((_, i, arr) => {
+              const angle = ((i - (arr.length - 1) / 2) / arr.length) * 0.6;
+              const lashLength = 0.008 * (faceGeometry.eyelashType === 'long' ? 1.5 : faceGeometry.eyelashType === 'dramatic' ? 2 : 1);
+              return (
+                <mesh 
+                  key={`left-lash-${i}`}
+                  position={[
+                    -body.eyeSpacing + Math.sin(angle) * body.eyeSize * 0.9,
+                    0.01 + body.eyeSize * 0.5 + Math.cos(angle) * body.eyeSize * 0.3,
+                    body.headDepth * 0.88 + body.eyeSize
+                  ]}
+                  rotation={[0.8, angle * 0.5, 0]}
+                  material={hairMat}
+                >
+                  <cylinderGeometry args={[0.001, 0.0005, lashLength, 4]} />
+                </mesh>
+              );
+            })}
+            {/* Right Eye Lashes */}
+            {Array.from({ length: faceGeometry.eyelashType === 'dramatic' ? 8 : faceGeometry.eyelashType === 'long' ? 6 : 4 }).map((_, i, arr) => {
+              const angle = ((i - (arr.length - 1) / 2) / arr.length) * 0.6;
+              const lashLength = 0.008 * (faceGeometry.eyelashType === 'long' ? 1.5 : faceGeometry.eyelashType === 'dramatic' ? 2 : 1);
+              return (
+                <mesh 
+                  key={`right-lash-${i}`}
+                  position={[
+                    body.eyeSpacing + Math.sin(angle) * body.eyeSize * 0.9,
+                    0.01 + body.eyeSize * 0.5 + Math.cos(angle) * body.eyeSize * 0.3,
+                    body.headDepth * 0.88 + body.eyeSize
+                  ]}
+                  rotation={[0.8, -angle * 0.5, 0]}
+                  material={hairMat}
+                >
+                  <cylinderGeometry args={[0.001, 0.0005, lashLength, 4]} />
+                </mesh>
+              );
+            })}
+          </>
+        )}
         
         {/* ===== HAIR STYLES ===== */}
         <HairMesh hairId={avatar.hair} headWidth={body.headWidth} headHeight={body.headHeight} headDepth={body.headDepth} hairMat={hairMat} seg={seg} />

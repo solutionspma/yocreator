@@ -107,6 +107,35 @@ export interface UIState {
   zoom: number;
 }
 
+// Rendering settings
+export interface RenderSettings {
+  resolution: string;
+  width: number;
+  height: number;
+  format: string;
+  background: string;
+  backgroundColor: string;
+  shadows: boolean;
+  antiAliasing: string;
+  mode: string;
+}
+
+// Pose settings
+export interface PoseSettings {
+  preset: string;
+  animation: string | null;
+  isPlaying: boolean;
+  playbackSpeed: number;
+}
+
+// Eye/face geometry settings
+export interface FaceGeometry {
+  eyeType: string;
+  teethType: string;
+  eyebrowType: string;
+  eyelashType: string;
+}
+
 // Defaults
 export const defaultMacro: MacroMorphs = {
   gender: 50, age: 25, muscle: 50, weight: 100, height: 50,
@@ -219,6 +248,68 @@ export const eyeColorPresets = [
   { name: 'Gray', color: '#778899' },
 ];
 
+// Eye type catalog
+export const eyeCatalog = [
+  { id: 'normal', name: 'Normal', thumbnail: '👁️' },
+  { id: 'anime', name: 'Anime', thumbnail: '🌸' },
+  { id: 'realistic', name: 'Realistic', thumbnail: '👀' },
+  { id: 'cartoon', name: 'Cartoon', thumbnail: '😃' },
+];
+
+// Teeth catalog
+export const teethCatalog = [
+  { id: 'normal', name: 'Normal', thumbnail: '🦷' },
+  { id: 'braces', name: 'Braces', thumbnail: '🔧' },
+  { id: 'vampire', name: 'Vampire', thumbnail: '🧛' },
+  { id: 'gold', name: 'Gold', thumbnail: '✨' },
+];
+
+// Eyebrow catalog
+export const eyebrowCatalog = [
+  { id: 'natural', name: 'Natural', thumbnail: '🤨' },
+  { id: 'thick', name: 'Thick', thumbnail: '😤' },
+  { id: 'thin', name: 'Thin', thumbnail: '🙂' },
+  { id: 'arched', name: 'Arched', thumbnail: '😏' },
+  { id: 'straight', name: 'Straight', thumbnail: '😐' },
+];
+
+// Eyelash catalog
+export const eyelashCatalog = [
+  { id: 'natural', name: 'Natural', thumbnail: '👁️' },
+  { id: 'long', name: 'Long', thumbnail: '🦋' },
+  { id: 'dramatic', name: 'Dramatic', thumbnail: '💃' },
+  { id: 'none', name: 'None', thumbnail: '⚪' },
+];
+
+// Default render settings
+export const defaultRenderSettings: RenderSettings = {
+  resolution: '1080p',
+  width: 1920,
+  height: 1080,
+  format: 'png',
+  background: 'transparent',
+  backgroundColor: '#12121f',
+  shadows: true,
+  antiAliasing: '4x',
+  mode: 'single',
+};
+
+// Default pose settings
+export const defaultPoseSettings: PoseSettings = {
+  preset: 'tpose',
+  animation: null,
+  isPlaying: false,
+  playbackSpeed: 1,
+};
+
+// Default face geometry
+export const defaultFaceGeometry: FaceGeometry = {
+  eyeType: 'normal',
+  teethType: 'normal',
+  eyebrowType: 'natural',
+  eyelashType: 'natural',
+};
+
 // Create default avatar
 export const createDefaultAvatar = (): AvatarState => ({
   id: `avatar_${Date.now()}`,
@@ -238,6 +329,9 @@ export const createDefaultAvatar = (): AvatarState => ({
 interface AvatarStore {
   avatar: AvatarState;
   ui: UIState;
+  render: RenderSettings;
+  pose: PoseSettings;
+  faceGeometry: FaceGeometry;
   savedAvatars: AvatarState[];
   setMacro: (key: keyof MacroMorphs, value: number) => void;
   setFace: (key: keyof FaceMorphs, value: number) => void;
@@ -255,6 +349,13 @@ interface AvatarStore {
   toggleSkeleton: () => void;
   setCameraView: (view: UIState['cameraView']) => void;
   setZoom: (zoom: number) => void;
+  setRender: (updates: Partial<RenderSettings>) => void;
+  setPose: (updates: Partial<PoseSettings>) => void;
+  setFaceGeometry: (updates: Partial<FaceGeometry>) => void;
+  setEyeType: (eyeType: string) => void;
+  setTeeth: (teethType: string) => void;
+  setEyebrows: (eyebrowType: string) => void;
+  setEyelashes: (eyelashType: string) => void;
   randomize: () => void;
   reset: () => void;
   setName: (name: string) => void;
@@ -277,6 +378,9 @@ export const useAvatarStore = create<AvatarStore>()(
         cameraView: 'front',
         zoom: 1,
       },
+      render: { ...defaultRenderSettings },
+      pose: { ...defaultPoseSettings },
+      faceGeometry: { ...defaultFaceGeometry },
       savedAvatars: [],
 
       setMacro: (key, value) => set((s) => ({ avatar: { ...s.avatar, macro: { ...s.avatar.macro, [key]: value } } })),
@@ -301,6 +405,24 @@ export const useAvatarStore = create<AvatarStore>()(
       toggleSkeleton: () => set((s) => ({ ui: { ...s.ui, showSkeleton: !s.ui.showSkeleton } })),
       setCameraView: (cameraView) => set((s) => ({ ui: { ...s.ui, cameraView } })),
       setZoom: (zoom) => set((s) => ({ ui: { ...s.ui, zoom } })),
+
+      // Render settings - accepts partial update
+      setRender: (updates) => set((s) => ({ render: { ...s.render, ...updates } })),
+      
+      // Pose settings - accepts partial update
+      setPose: (updates) => set((s) => ({ 
+        pose: { ...s.pose, ...updates },
+        avatar: updates.preset ? { ...s.avatar, pose: updates.preset } : s.avatar
+      })),
+      
+      // Face geometry - accepts partial update
+      setFaceGeometry: (updates) => set((s) => ({ faceGeometry: { ...s.faceGeometry, ...updates } })),
+      
+      // Convenience setters for face geometry
+      setEyeType: (eyeType) => set((s) => ({ faceGeometry: { ...s.faceGeometry, eyeType } })),
+      setTeeth: (teethType) => set((s) => ({ faceGeometry: { ...s.faceGeometry, teethType } })),
+      setEyebrows: (eyebrowType) => set((s) => ({ faceGeometry: { ...s.faceGeometry, eyebrowType } })),
+      setEyelashes: (eyelashType) => set((s) => ({ faceGeometry: { ...s.faceGeometry, eyelashType } })),
 
       randomize: () => set((s) => {
         const r = () => Math.floor(Math.random() * 100);
