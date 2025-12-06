@@ -1,13 +1,26 @@
 /**
  * Avatar Storage Utility
  * Handles saving/loading avatars from localStorage and Supabase
+ * 
+ * NOTE: The new Omni-Avatar Engine uses Zustand with persist middleware
+ * for state management. This file provides legacy compatibility and
+ * Supabase sync stubs for future cloud storage.
  */
 
-import type { AvatarParameters } from "../components/avatar/AvatarControls";
+// Legacy type - kept for backward compatibility
+export interface LegacyAvatarParameters {
+  skinColor: string;
+  hairColor: string;
+  hairStyle: string;
+  eyeColor: string;
+  height: number;
+  weight: number;
+  [key: string]: string | number;
+}
 
 export interface SavedAvatar {
   id?: string;
-  parameters: AvatarParameters;
+  parameters: LegacyAvatarParameters | Record<string, unknown>;
   avatarUrl?: string | null;
   thumbnailUrl?: string | null;
   createdAt: string;
