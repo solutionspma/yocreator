@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useRef, useMemo, useEffect, Suspense } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import React, { useRef, useMemo, useEffect, Suspense, useState } from 'react';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, Environment, ContactShadows, Html } from '@react-three/drei';
-import { useAvatarStore } from '../store';
+import { useAvatarStore, setSceneRef } from '../store';
 import * as THREE from 'three';
 
 // Loading spinner
@@ -355,7 +355,7 @@ function ScaledSphere({
 
 // Human body built with smooth geometry
 function RealisticHumanBody() {
-  const { avatar, ui, faceGeometry } = useAvatarStore();
+  const { avatar, ui, faceGeometry, pose } = useAvatarStore();
   const groupRef = useRef<THREE.Group>(null);
   
   // Calculate body dimensions from all sliders
@@ -466,13 +466,206 @@ function RealisticHumanBody() {
   const scale = body.height;
   const seg = 32;
   
+  // ===== ANIMATION STATE =====
+  const [animTime, setAnimTime] = useState(0);
+  
+  // Animation loop
+  useFrame((state, delta) => {
+    if (pose.isPlaying && pose.animation) {
+      setAnimTime(prev => prev + delta * pose.playbackSpeed);
+    }
+  });
+  
+  // ===== POSE CALCULATIONS =====
+  // Calculate arm and leg rotations based on selected pose + animation
+  const poseRotations = useMemo(() => {
+    const currentPose = pose.preset || 'tpose';
+    const anim = pose.animation;
+    const playing = pose.isPlaying;
+    
+    // Default T-Pose - arms out to sides
+    let leftArmRotation: [number, number, number] = [0, 0, Math.PI / 2];  // Arms horizontal
+    let rightArmRotation: [number, number, number] = [0, 0, -Math.PI / 2];
+    let leftLegRotation: [number, number, number] = [0, 0, 0];
+    let rightLegRotation: [number, number, number] = [0, 0, 0];
+    let headRotation: [number, number, number] = [0, 0, 0];
+    let torsoRotation: [number, number, number] = [0, 0, 0];
+    
+    // Apply animation if playing
+    if (playing && anim) {
+      const t = animTime;
+      switch (anim) {
+        case 'idle':
+          // Subtle breathing/swaying
+          leftArmRotation = [0.05 * Math.sin(t * 0.8), 0, 0.1 + 0.02 * Math.sin(t * 0.5)];
+          rightArmRotation = [0.05 * Math.sin(t * 0.8 + 0.3), 0, -0.1 - 0.02 * Math.sin(t * 0.5)];
+          torsoRotation = [0, 0.02 * Math.sin(t * 0.3), 0];
+          break;
+          
+        case 'walk':
+          // Walk cycle
+          leftArmRotation = [-0.4 * Math.sin(t * 4), 0, 0.1];
+          rightArmRotation = [0.4 * Math.sin(t * 4), 0, -0.1];
+          leftLegRotation = [0.5 * Math.sin(t * 4), 0, 0];
+          rightLegRotation = [-0.5 * Math.sin(t * 4), 0, 0];
+          torsoRotation = [0, 0.05 * Math.sin(t * 4), 0];
+          break;
+          
+        case 'run':
+          // Run cycle - faster, more exaggerated
+          leftArmRotation = [-0.8 * Math.sin(t * 8), 0, 0.15];
+          rightArmRotation = [0.8 * Math.sin(t * 8), 0, -0.15];
+          leftLegRotation = [0.8 * Math.sin(t * 8), 0, 0];
+          rightLegRotation = [-0.8 * Math.sin(t * 8), 0, 0];
+          torsoRotation = [0.1, 0.08 * Math.sin(t * 8), 0];
+          break;
+          
+        case 'jump':
+          // Jump - crouch then extend
+          const jumpPhase = (Math.sin(t * 3) + 1) / 2;
+          leftLegRotation = [-0.3 * (1 - jumpPhase), 0, 0];
+          rightLegRotation = [-0.3 * (1 - jumpPhase), 0, 0];
+          leftArmRotation = [-0.5 * jumpPhase, 0, 0.3 + 0.4 * jumpPhase];
+          rightArmRotation = [-0.5 * jumpPhase, 0, -0.3 - 0.4 * jumpPhase];
+          break;
+          
+        case 'wave':
+          // Waving hand
+          leftArmRotation = [0.1, 0, 0.1];
+          rightArmRotation = [-0.3, -0.2, -Math.PI * 0.7 + 0.3 * Math.sin(t * 6)];
+          headRotation = [0, 0.1 * Math.sin(t * 2), 0];
+          break;
+          
+        case 'dance':
+          // Dance moves
+          leftArmRotation = [0.3 * Math.sin(t * 3), 0.2 * Math.cos(t * 3), 0.4 + 0.3 * Math.sin(t * 3)];
+          rightArmRotation = [0.3 * Math.sin(t * 3 + Math.PI), 0.2 * Math.cos(t * 3 + Math.PI), -0.4 - 0.3 * Math.sin(t * 3)];
+          leftLegRotation = [0.2 * Math.sin(t * 6), 0, 0.1 * Math.sin(t * 3)];
+          rightLegRotation = [0.2 * Math.sin(t * 6 + Math.PI), 0, -0.1 * Math.sin(t * 3)];
+          torsoRotation = [0, 0.2 * Math.sin(t * 3), 0.05 * Math.sin(t * 6)];
+          headRotation = [0.1 * Math.sin(t * 3), 0.15 * Math.sin(t * 1.5), 0];
+          break;
+          
+        case 'clap':
+          // Clapping hands
+          const clapPhase = Math.sin(t * 8);
+          leftArmRotation = [0.6, 0.4 + 0.4 * clapPhase, 0.3];
+          rightArmRotation = [0.6, -0.4 - 0.4 * clapPhase, -0.3];
+          break;
+          
+        case 'nod':
+          // Nodding head
+          headRotation = [0.2 * Math.sin(t * 3), 0, 0];
+          leftArmRotation = [0.1, 0, 0.1];
+          rightArmRotation = [0.1, 0, -0.1];
+          break;
+          
+        case 'shake_head':
+          // Shaking head no
+          headRotation = [0, 0.3 * Math.sin(t * 4), 0];
+          leftArmRotation = [0.1, 0, 0.1];
+          rightArmRotation = [0.1, 0, -0.1];
+          break;
+          
+        case 'talk':
+          // Talking with gestures
+          leftArmRotation = [0.2 + 0.15 * Math.sin(t * 2), 0.1 * Math.sin(t * 1.5), 0.2 + 0.1 * Math.sin(t * 2.5)];
+          rightArmRotation = [0.2 + 0.15 * Math.sin(t * 2 + 1), -0.1 * Math.sin(t * 1.5), -0.2 - 0.1 * Math.sin(t * 2.5)];
+          headRotation = [0.05 * Math.sin(t * 1.5), 0.1 * Math.sin(t * 0.8), 0];
+          break;
+      }
+    } else {
+      // Static pose (no animation)
+      switch (currentPose) {
+        case 'tpose':
+          // Arms straight out (default above)
+          break;
+          
+        case 'apose':
+          // Arms at 45 degrees down
+          leftArmRotation = [0, 0, Math.PI / 4];
+          rightArmRotation = [0, 0, -Math.PI / 4];
+          break;
+          
+        case 'relaxed':
+          // Arms relaxed at sides, slight bend
+          leftArmRotation = [0.1, 0.1, 0.15];
+          rightArmRotation = [0.1, -0.1, -0.15];
+          break;
+          
+        case 'arms_crossed':
+          // Arms crossed over chest
+          leftArmRotation = [0.3, 0.8, 0.5];
+          rightArmRotation = [0.3, -0.8, -0.5];
+          break;
+          
+        case 'hands_hips':
+          // Hands on hips
+          leftArmRotation = [0.2, 0.5, 0.3];
+          rightArmRotation = [0.2, -0.5, -0.3];
+          break;
+          
+        case 'walking':
+          // Walking pose - one arm forward, one back
+          leftArmRotation = [-0.4, 0, 0.1];
+          rightArmRotation = [0.4, 0, -0.1];
+          leftLegRotation = [0.3, 0, 0];
+          rightLegRotation = [-0.3, 0, 0];
+          break;
+          
+        case 'running':
+          // Running pose - more extreme arm/leg positions
+          leftArmRotation = [-0.8, 0, 0.2];
+          rightArmRotation = [0.8, 0, -0.2];
+          leftLegRotation = [0.6, 0, 0];
+          rightLegRotation = [-0.5, 0, 0];
+          break;
+          
+        case 'sitting':
+          // Sitting - legs bent forward
+          leftLegRotation = [-Math.PI / 2, 0, 0];
+          rightLegRotation = [-Math.PI / 2, 0, 0];
+          leftArmRotation = [0.2, 0, 0.1];
+          rightArmRotation = [0.2, 0, -0.1];
+          break;
+          
+        case 'waving':
+          // Right arm raised waving
+          leftArmRotation = [0.1, 0, 0.1];
+          rightArmRotation = [-0.3, -0.2, -Math.PI * 0.7];
+          break;
+          
+        case 'thinking':
+          // Hand on chin pose
+          leftArmRotation = [0.1, 0, 0.1];
+          rightArmRotation = [0.5, -0.8, -0.3];
+          headRotation = [0.1, 0.1, 0];
+          break;
+          
+        case 'pointing':
+          // Right arm pointing forward
+          leftArmRotation = [0.1, 0, 0.1];
+          rightArmRotation = [Math.PI / 2, 0, 0];
+          break;
+          
+        case 'presenting':
+          // Both arms out presenting
+          leftArmRotation = [0, 0.3, Math.PI / 3];
+          rightArmRotation = [0, -0.3, -Math.PI / 3];
+          break;
+      }
+    }
+    
+    return { leftArmRotation, rightArmRotation, leftLegRotation, rightLegRotation, headRotation, torsoRotation };
+  }, [pose.preset, pose.animation, pose.isPlaying, animTime]);
+  
   // Position avatar so feet are at Y=0 (standing on floor)
   const avatarHeight = 1.0; // Normalized height before scaling
 
   return (
     <group ref={groupRef} scale={scale} position={[0, scale * 0.48, 0]}>
       {/* ===== HEAD ===== */}
-      <group position={[0, 0.42, 0]}>
+      <group position={[0, 0.42, 0]} rotation={poseRotations.headRotation}>
         {/* Skull */}
         <ScaledSphere 
           scaleX={body.headWidth} scaleY={body.headHeight} scaleZ={body.headDepth} 
@@ -691,7 +884,7 @@ function RealisticHumanBody() {
       </mesh>
       
       {/* ===== TORSO ===== */}
-      <group position={[0, 0.02, 0]}>
+      <group position={[0, 0.02, 0]} rotation={poseRotations.torsoRotation}>
         {/* Shoulders */}
         <mesh material={skinMat} rotation={[0, 0, Math.PI / 2]} castShadow>
           <capsuleGeometry args={[body.chestDepth, body.shoulderWidth * 2 - body.chestDepth * 2, 4, seg]} />
@@ -740,7 +933,7 @@ function RealisticHumanBody() {
       </group>
       
       {/* ===== LEFT ARM ===== */}
-      <group position={[-body.shoulderWidth - 0.02, 0.02, 0]}>
+      <group position={[-body.shoulderWidth - 0.02, 0.02, 0]} rotation={poseRotations.leftArmRotation}>
         <mesh position={[0, -body.armLength * 0.35, 0]} material={skinMat} castShadow>
           <capsuleGeometry args={[body.bicepRadius, body.armLength * 0.45, 4, seg]} />
         </mesh>
@@ -756,7 +949,7 @@ function RealisticHumanBody() {
       </group>
       
       {/* ===== RIGHT ARM ===== */}
-      <group position={[body.shoulderWidth + 0.02, 0.02, 0]}>
+      <group position={[body.shoulderWidth + 0.02, 0.02, 0]} rotation={poseRotations.rightArmRotation}>
         <mesh position={[0, -body.armLength * 0.35, 0]} material={skinMat} castShadow>
           <capsuleGeometry args={[body.bicepRadius, body.armLength * 0.45, 4, seg]} />
         </mesh>
@@ -772,7 +965,7 @@ function RealisticHumanBody() {
       </group>
       
       {/* ===== LEFT LEG ===== */}
-      <group position={[-body.hipWidth * 0.5, -0.33, 0]}>
+      <group position={[-body.hipWidth * 0.5, -0.33, 0]} rotation={poseRotations.leftLegRotation}>
         <mesh position={[0, -body.legLength * 0.3, 0]} material={skinMat} castShadow>
           <capsuleGeometry args={[body.thighRadius, body.legLength * 0.45, 4, seg]} />
         </mesh>
@@ -791,7 +984,7 @@ function RealisticHumanBody() {
       </group>
       
       {/* ===== RIGHT LEG ===== */}
-      <group position={[body.hipWidth * 0.5, -0.33, 0]}>
+      <group position={[body.hipWidth * 0.5, -0.33, 0]} rotation={poseRotations.rightLegRotation}>
         <mesh position={[0, -body.legLength * 0.3, 0]} material={skinMat} castShadow>
           <capsuleGeometry args={[body.thighRadius, body.legLength * 0.45, 4, seg]} />
         </mesh>
@@ -812,18 +1005,27 @@ function RealisticHumanBody() {
   );
 }
 
-// Clothing layer
+// Clothing layer - improved realistic clothing shapes
 function ClothingLayer() {
-  const { avatar, ui } = useAvatarStore();
-  const hasTop = avatar.clothing.some(c => ['shirt01', 'tshirt02', 'hoodie01', 'jacket01', 'suit01'].includes(c));
-  const hasBottom = avatar.clothing.some(c => ['jeans01', 'short01', 'suit01res'].includes(c));
-  const hasShoes = avatar.clothing.some(c => ['shoes01', 'shoes02'].includes(c));
+  const { avatar, ui, pose } = useAvatarStore();
+  
+  // Check what clothing items are equipped
+  const hasTshirt = avatar.clothing.includes('shirt01') || avatar.clothing.includes('tshirt02');
+  const hasHoodie = avatar.clothing.includes('hoodie01');
+  const hasJacket = avatar.clothing.includes('jacket01');
+  const hasSuit = avatar.clothing.includes('suit01');
+  const hasJeans = avatar.clothing.includes('jeans01');
+  const hasShorts = avatar.clothing.includes('short01');
+  const hasSuitPants = avatar.clothing.includes('suit01res');
+  const hasSneakers = avatar.clothing.includes('shoes01');
+  const hasDressShoes = avatar.clothing.includes('shoes02');
   const hasDress = avatar.clothing.includes('dress01');
   const hasWorksuit = avatar.clothing.includes('worksuit');
   
   const m = avatar.macro;
   const t = avatar.torso;
   const l = avatar.legs;
+  const a = avatar.arms;
   
   const gender = m.gender / 100;
   const muscle = m.muscle / 100;
@@ -831,81 +1033,418 @@ function ClothingLayer() {
   const height = 1.6 + (m.height / 100) * 0.4;
   
   const shoulderWidth = 0.18 + gender * 0.06 + muscle * 0.03 + (t.shoulderWidth / 100 - 0.5) * 0.04;
+  const chestWidth = 0.15 + gender * 0.02 + muscle * 0.02 + weight * 0.02 + (t.chestWidth / 100 - 0.5) * 0.03;
   const chestDepth = 0.1 + muscle * 0.03 + weight * 0.025 + (t.chestDepth / 100 - 0.5) * 0.025;
+  const waistWidth = 0.12 + weight * 0.06 - gender * 0.02 + (t.waistWidth / 100 - 0.5) * 0.03;
   const hipWidth = 0.15 + (1 - gender) * 0.04 + weight * 0.03 + (t.hipWidth / 100 - 0.5) * 0.03;
   const legLength = 0.42 + (l.legLength / 100 - 0.5) * 0.08;
   const thighRadius = 0.055 + muscle * 0.015 + weight * 0.02 + (l.upperLegWidth / 100 - 0.5) * 0.015;
+  const armLength = 0.28 + (a.armLength / 100 - 0.5) * 0.06;
+  const bicepRadius = (0.03 + muscle * 0.015 + (a.upperArmWidth / 100 - 0.5) * 0.01);
   
-  const clothMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#2a4a6a',
-    roughness: 0.8,
+  // Get pose rotations from store
+  const poseRotations = useMemo(() => {
+    const currentPose = pose.preset || 'tpose';
+    let leftArmRotation: [number, number, number] = [0, 0, Math.PI / 2];
+    let rightArmRotation: [number, number, number] = [0, 0, -Math.PI / 2];
+    let leftLegRotation: [number, number, number] = [0, 0, 0];
+    let rightLegRotation: [number, number, number] = [0, 0, 0];
+    
+    switch (currentPose) {
+      case 'apose':
+        leftArmRotation = [0, 0, Math.PI / 4];
+        rightArmRotation = [0, 0, -Math.PI / 4];
+        break;
+      case 'relaxed':
+        leftArmRotation = [0.1, 0.1, 0.15];
+        rightArmRotation = [0.1, -0.1, -0.15];
+        break;
+      case 'walking':
+        leftArmRotation = [-0.4, 0, 0.1];
+        rightArmRotation = [0.4, 0, -0.1];
+        leftLegRotation = [0.3, 0, 0];
+        rightLegRotation = [-0.3, 0, 0];
+        break;
+    }
+    return { leftArmRotation, rightArmRotation, leftLegRotation, rightLegRotation };
+  }, [pose.preset]);
+  
+  // Material definitions with better colors
+  const tshirtMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#3366CC',  // Blue t-shirt
+    roughness: 0.85,
     wireframe: ui.showWireframe,
   }), [ui.showWireframe]);
   
-  const pantsMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#1a2a3a',
-    roughness: 0.7,
+  const hoodieMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#4A4A4A',  // Dark gray hoodie
+    roughness: 0.9,
     wireframe: ui.showWireframe,
   }), [ui.showWireframe]);
   
-  const shoeMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#1a1a1a',
-    roughness: 0.5,
+  const jacketMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#2C1810',  // Brown leather
+    roughness: 0.4,
     wireframe: ui.showWireframe,
   }), [ui.showWireframe]);
-
-  const dressMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#8B4557',
+  
+  const suitMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#1a1a2e',  // Dark navy suit
     roughness: 0.6,
     wireframe: ui.showWireframe,
   }), [ui.showWireframe]);
   
+  const jeansMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#1E3A5F',  // Denim blue
+    roughness: 0.8,
+    wireframe: ui.showWireframe,
+  }), [ui.showWireframe]);
+  
+  const shortsMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#4A4A4A',  // Khaki/dark
+    roughness: 0.75,
+    wireframe: ui.showWireframe,
+  }), [ui.showWireframe]);
+  
+  const sneakerMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#FFFFFF',  // White sneakers
+    roughness: 0.5,
+    wireframe: ui.showWireframe,
+  }), [ui.showWireframe]);
+  
+  const dressShoeMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#1a1a1a',  // Black dress shoes
+    roughness: 0.3,
+    wireframe: ui.showWireframe,
+  }), [ui.showWireframe]);
+
+  const dressMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#8B4557',  // Burgundy dress
+    roughness: 0.6,
+    wireframe: ui.showWireframe,
+  }), [ui.showWireframe]);
+  
+  const worksuitMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#2a4a6a',  // Work blue
+    roughness: 0.7,
+    wireframe: ui.showWireframe,
+  }), [ui.showWireframe]);
+  
+  const clothOffset = 0.008; // Offset clothes from body
+  
   return (
     <group scale={height} position={[0, height * 0.48, 0]}>
-      {/* Top */}
-      {(hasTop || hasWorksuit) && (
+      
+      {/* ===== T-SHIRT ===== */}
+      {hasTshirt && !hasHoodie && !hasJacket && !hasSuit && (
         <group position={[0, 0.02, 0]}>
-          <mesh material={clothMat} rotation={[0, 0, Math.PI / 2]} castShadow>
-            <capsuleGeometry args={[chestDepth + 0.015, shoulderWidth * 2 - chestDepth * 2, 4, 24]} />
+          {/* Torso */}
+          <mesh material={tshirtMat} castShadow>
+            <cylinderGeometry args={[chestWidth + clothOffset, waistWidth + clothOffset, 0.32, 24]} />
           </mesh>
-          <mesh position={[0, -0.15, 0]} material={clothMat} castShadow>
-            <cylinderGeometry args={[hipWidth + 0.01, shoulderWidth, 0.35, 24]} />
+          {/* Collar */}
+          <mesh position={[0, 0.17, chestDepth * 0.3]} material={tshirtMat}>
+            <torusGeometry args={[0.04, 0.01, 8, 16, Math.PI]} />
+          </mesh>
+          {/* Short sleeves - left */}
+          <group position={[-shoulderWidth - 0.01, 0.02, 0]} rotation={poseRotations.leftArmRotation}>
+            <mesh position={[0, -0.06, 0]} material={tshirtMat} castShadow>
+              <cylinderGeometry args={[bicepRadius + clothOffset, bicepRadius + clothOffset + 0.01, 0.1, 12]} />
+            </mesh>
+          </group>
+          {/* Short sleeves - right */}
+          <group position={[shoulderWidth + 0.01, 0.02, 0]} rotation={poseRotations.rightArmRotation}>
+            <mesh position={[0, -0.06, 0]} material={tshirtMat} castShadow>
+              <cylinderGeometry args={[bicepRadius + clothOffset, bicepRadius + clothOffset + 0.01, 0.1, 12]} />
+            </mesh>
+          </group>
+        </group>
+      )}
+      
+      {/* ===== HOODIE ===== */}
+      {hasHoodie && (
+        <group position={[0, 0.02, 0]}>
+          {/* Torso - thicker for hoodie */}
+          <mesh material={hoodieMat} castShadow>
+            <cylinderGeometry args={[chestWidth + clothOffset * 2, waistWidth + clothOffset * 2, 0.35, 24]} />
+          </mesh>
+          {/* Hood (folded down on back) */}
+          <mesh position={[0, 0.2, -chestDepth * 0.6]} rotation={[0.5, 0, 0]} material={hoodieMat}>
+            <sphereGeometry args={[0.06, 12, 12, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
+          </mesh>
+          {/* Long sleeves - left */}
+          <group position={[-shoulderWidth - 0.01, 0.02, 0]} rotation={poseRotations.leftArmRotation}>
+            <mesh position={[0, -armLength * 0.5, 0]} material={hoodieMat} castShadow>
+              <cylinderGeometry args={[bicepRadius * 0.9 + clothOffset, bicepRadius + clothOffset * 2, armLength * 0.9, 12]} />
+            </mesh>
+          </group>
+          {/* Long sleeves - right */}
+          <group position={[shoulderWidth + 0.01, 0.02, 0]} rotation={poseRotations.rightArmRotation}>
+            <mesh position={[0, -armLength * 0.5, 0]} material={hoodieMat} castShadow>
+              <cylinderGeometry args={[bicepRadius * 0.9 + clothOffset, bicepRadius + clothOffset * 2, armLength * 0.9, 12]} />
+            </mesh>
+          </group>
+          {/* Kangaroo pocket */}
+          <mesh position={[0, -0.12, chestDepth + 0.01]} material={hoodieMat}>
+            <boxGeometry args={[0.12, 0.06, 0.015]} />
           </mesh>
         </group>
       )}
       
-      {/* Pants */}
-      {(hasBottom || hasWorksuit) && (
+      {/* ===== JACKET ===== */}
+      {hasJacket && (
+        <group position={[0, 0.02, 0]}>
+          {/* Torso */}
+          <mesh material={jacketMat} castShadow>
+            <cylinderGeometry args={[chestWidth + clothOffset * 2, waistWidth + clothOffset * 1.5, 0.32, 24]} />
+          </mesh>
+          {/* Collar/lapels */}
+          <mesh position={[-0.04, 0.15, chestDepth * 0.5]} rotation={[0, 0.3, 0]} material={jacketMat}>
+            <boxGeometry args={[0.04, 0.08, 0.015]} />
+          </mesh>
+          <mesh position={[0.04, 0.15, chestDepth * 0.5]} rotation={[0, -0.3, 0]} material={jacketMat}>
+            <boxGeometry args={[0.04, 0.08, 0.015]} />
+          </mesh>
+          {/* Long sleeves */}
+          <group position={[-shoulderWidth - 0.01, 0.02, 0]} rotation={poseRotations.leftArmRotation}>
+            <mesh position={[0, -armLength * 0.5, 0]} material={jacketMat} castShadow>
+              <cylinderGeometry args={[bicepRadius * 0.85 + clothOffset, bicepRadius + clothOffset * 2, armLength * 0.95, 12]} />
+            </mesh>
+          </group>
+          <group position={[shoulderWidth + 0.01, 0.02, 0]} rotation={poseRotations.rightArmRotation}>
+            <mesh position={[0, -armLength * 0.5, 0]} material={jacketMat} castShadow>
+              <cylinderGeometry args={[bicepRadius * 0.85 + clothOffset, bicepRadius + clothOffset * 2, armLength * 0.95, 12]} />
+            </mesh>
+          </group>
+        </group>
+      )}
+      
+      {/* ===== SUIT JACKET ===== */}
+      {hasSuit && (
+        <group position={[0, 0.02, 0]}>
+          {/* Torso - structured */}
+          <mesh material={suitMat} castShadow>
+            <cylinderGeometry args={[chestWidth + clothOffset * 1.5, waistWidth + clothOffset, 0.34, 24]} />
+          </mesh>
+          {/* Structured shoulders */}
+          <mesh material={suitMat} rotation={[0, 0, Math.PI / 2]} castShadow>
+            <capsuleGeometry args={[chestDepth + clothOffset * 2, shoulderWidth * 2.1, 4, 16]} />
+          </mesh>
+          {/* Lapels */}
+          <mesh position={[-0.035, 0.12, chestDepth * 0.6]} rotation={[0, 0.2, 0]} material={suitMat}>
+            <boxGeometry args={[0.035, 0.12, 0.01]} />
+          </mesh>
+          <mesh position={[0.035, 0.12, chestDepth * 0.6]} rotation={[0, -0.2, 0]} material={suitMat}>
+            <boxGeometry args={[0.035, 0.12, 0.01]} />
+          </mesh>
+          {/* Sleeves */}
+          <group position={[-shoulderWidth - 0.01, 0.02, 0]} rotation={poseRotations.leftArmRotation}>
+            <mesh position={[0, -armLength * 0.5, 0]} material={suitMat} castShadow>
+              <cylinderGeometry args={[bicepRadius * 0.8 + clothOffset, bicepRadius + clothOffset * 1.5, armLength * 0.95, 12]} />
+            </mesh>
+          </group>
+          <group position={[shoulderWidth + 0.01, 0.02, 0]} rotation={poseRotations.rightArmRotation}>
+            <mesh position={[0, -armLength * 0.5, 0]} material={suitMat} castShadow>
+              <cylinderGeometry args={[bicepRadius * 0.8 + clothOffset, bicepRadius + clothOffset * 1.5, armLength * 0.95, 12]} />
+            </mesh>
+          </group>
+        </group>
+      )}
+      
+      {/* ===== WORK SUIT (COVERALLS) ===== */}
+      {hasWorksuit && (
+        <group>
+          {/* Upper body */}
+          <group position={[0, 0.02, 0]}>
+            <mesh material={worksuitMat} castShadow>
+              <cylinderGeometry args={[chestWidth + clothOffset * 2, waistWidth + clothOffset * 2, 0.35, 24]} />
+            </mesh>
+            {/* Collar */}
+            <mesh position={[0, 0.18, chestDepth * 0.4]} material={worksuitMat}>
+              <boxGeometry args={[0.08, 0.03, 0.02]} />
+            </mesh>
+            {/* Sleeves */}
+            <group position={[-shoulderWidth - 0.01, 0.02, 0]} rotation={poseRotations.leftArmRotation}>
+              <mesh position={[0, -armLength * 0.5, 0]} material={worksuitMat} castShadow>
+                <cylinderGeometry args={[bicepRadius * 0.9, bicepRadius + clothOffset * 2, armLength * 0.9, 12]} />
+              </mesh>
+            </group>
+            <group position={[shoulderWidth + 0.01, 0.02, 0]} rotation={poseRotations.rightArmRotation}>
+              <mesh position={[0, -armLength * 0.5, 0]} material={worksuitMat} castShadow>
+                <cylinderGeometry args={[bicepRadius * 0.9, bicepRadius + clothOffset * 2, armLength * 0.9, 12]} />
+              </mesh>
+            </group>
+          </group>
+          {/* Lower body / pants portion */}
+          <group position={[0, -0.33, 0]}>
+            <mesh material={worksuitMat} castShadow>
+              <cylinderGeometry args={[hipWidth + clothOffset * 2, hipWidth + clothOffset * 2, 0.1, 24]} />
+            </mesh>
+            <group rotation={poseRotations.leftLegRotation}>
+              <mesh position={[-hipWidth * 0.5, -legLength * 0.5, 0]} material={worksuitMat} castShadow>
+                <cylinderGeometry args={[thighRadius * 0.75, thighRadius + clothOffset * 2, legLength * 0.95, 16]} />
+              </mesh>
+            </group>
+            <group rotation={poseRotations.rightLegRotation}>
+              <mesh position={[hipWidth * 0.5, -legLength * 0.5, 0]} material={worksuitMat} castShadow>
+                <cylinderGeometry args={[thighRadius * 0.75, thighRadius + clothOffset * 2, legLength * 0.95, 16]} />
+              </mesh>
+            </group>
+          </group>
+        </group>
+      )}
+      
+      {/* ===== JEANS ===== */}
+      {hasJeans && !hasWorksuit && (
         <group position={[0, -0.33, 0]}>
-          <mesh material={pantsMat} castShadow>
-            <cylinderGeometry args={[hipWidth + 0.012, hipWidth + 0.012, 0.08, 24]} />
+          {/* Waistband */}
+          <mesh position={[0, 0.02, 0]} material={jeansMat} castShadow>
+            <cylinderGeometry args={[hipWidth + clothOffset * 1.5, hipWidth + clothOffset, 0.05, 24]} />
           </mesh>
-          <mesh position={[-hipWidth * 0.5, -legLength * 0.5, 0]} material={pantsMat} castShadow>
-            <cylinderGeometry args={[thighRadius * 0.8, thighRadius + 0.01, legLength * 0.95, 16]} />
-          </mesh>
-          <mesh position={[hipWidth * 0.5, -legLength * 0.5, 0]} material={pantsMat} castShadow>
-            <cylinderGeometry args={[thighRadius * 0.8, thighRadius + 0.01, legLength * 0.95, 16]} />
-          </mesh>
+          {/* Belt loops hint */}
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <mesh key={i} position={[
+              Math.sin(i * Math.PI / 3) * (hipWidth + clothOffset * 2),
+              0.025,
+              Math.cos(i * Math.PI / 3) * (hipWidth + clothOffset * 2) * 0.8
+            ]} material={jeansMat}>
+              <boxGeometry args={[0.008, 0.02, 0.003]} />
+            </mesh>
+          ))}
+          {/* Left leg */}
+          <group rotation={poseRotations.leftLegRotation}>
+            <mesh position={[-hipWidth * 0.5, -legLength * 0.5, 0]} material={jeansMat} castShadow>
+              <cylinderGeometry args={[thighRadius * 0.7, thighRadius + clothOffset * 1.5, legLength * 0.95, 16]} />
+            </mesh>
+          </group>
+          {/* Right leg */}
+          <group rotation={poseRotations.rightLegRotation}>
+            <mesh position={[hipWidth * 0.5, -legLength * 0.5, 0]} material={jeansMat} castShadow>
+              <cylinderGeometry args={[thighRadius * 0.7, thighRadius + clothOffset * 1.5, legLength * 0.95, 16]} />
+            </mesh>
+          </group>
         </group>
       )}
       
-      {/* Shoes */}
-      {hasShoes && (
+      {/* ===== SHORTS ===== */}
+      {hasShorts && !hasWorksuit && (
+        <group position={[0, -0.33, 0]}>
+          <mesh position={[0, 0.02, 0]} material={shortsMat} castShadow>
+            <cylinderGeometry args={[hipWidth + clothOffset * 1.5, hipWidth + clothOffset, 0.05, 24]} />
+          </mesh>
+          {/* Short legs */}
+          <group rotation={poseRotations.leftLegRotation}>
+            <mesh position={[-hipWidth * 0.5, -0.12, 0]} material={shortsMat} castShadow>
+              <cylinderGeometry args={[thighRadius * 0.85, thighRadius + clothOffset * 1.5, 0.2, 16]} />
+            </mesh>
+          </group>
+          <group rotation={poseRotations.rightLegRotation}>
+            <mesh position={[hipWidth * 0.5, -0.12, 0]} material={shortsMat} castShadow>
+              <cylinderGeometry args={[thighRadius * 0.85, thighRadius + clothOffset * 1.5, 0.2, 16]} />
+            </mesh>
+          </group>
+        </group>
+      )}
+      
+      {/* ===== SUIT PANTS ===== */}
+      {hasSuitPants && !hasWorksuit && (
+        <group position={[0, -0.33, 0]}>
+          <mesh position={[0, 0.02, 0]} material={suitMat} castShadow>
+            <cylinderGeometry args={[hipWidth + clothOffset, hipWidth + clothOffset, 0.05, 24]} />
+          </mesh>
+          <group rotation={poseRotations.leftLegRotation}>
+            <mesh position={[-hipWidth * 0.5, -legLength * 0.5, 0]} material={suitMat} castShadow>
+              <cylinderGeometry args={[thighRadius * 0.65, thighRadius + clothOffset, legLength * 0.95, 16]} />
+            </mesh>
+          </group>
+          <group rotation={poseRotations.rightLegRotation}>
+            <mesh position={[hipWidth * 0.5, -legLength * 0.5, 0]} material={suitMat} castShadow>
+              <cylinderGeometry args={[thighRadius * 0.65, thighRadius + clothOffset, legLength * 0.95, 16]} />
+            </mesh>
+          </group>
+        </group>
+      )}
+      
+      {/* ===== SNEAKERS ===== */}
+      {hasSneakers && (
         <>
-          <mesh position={[-hipWidth * 0.5, -legLength - 0.82, 0.02]} material={shoeMat} castShadow>
-            <boxGeometry args={[0.045, 0.03, 0.1]} />
-          </mesh>
-          <mesh position={[hipWidth * 0.5, -legLength - 0.82, 0.02]} material={shoeMat} castShadow>
-            <boxGeometry args={[0.045, 0.03, 0.1]} />
-          </mesh>
+          <group position={[-hipWidth * 0.5, -legLength - 0.82, 0]} rotation={poseRotations.leftLegRotation}>
+            {/* Main shoe body */}
+            <mesh position={[0, 0, 0.015]} material={sneakerMat} castShadow>
+              <boxGeometry args={[0.05, 0.035, 0.11]} />
+            </mesh>
+            {/* Toe cap */}
+            <mesh position={[0, 0.005, 0.055]} material={sneakerMat}>
+              <sphereGeometry args={[0.025, 8, 8, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
+            </mesh>
+            {/* Sole */}
+            <mesh position={[0, -0.02, 0.015]} material={new THREE.MeshStandardMaterial({ color: '#333' })}>
+              <boxGeometry args={[0.052, 0.012, 0.115]} />
+            </mesh>
+          </group>
+          <group position={[hipWidth * 0.5, -legLength - 0.82, 0]} rotation={poseRotations.rightLegRotation}>
+            <mesh position={[0, 0, 0.015]} material={sneakerMat} castShadow>
+              <boxGeometry args={[0.05, 0.035, 0.11]} />
+            </mesh>
+            <mesh position={[0, 0.005, 0.055]} material={sneakerMat}>
+              <sphereGeometry args={[0.025, 8, 8, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
+            </mesh>
+            <mesh position={[0, -0.02, 0.015]} material={new THREE.MeshStandardMaterial({ color: '#333' })}>
+              <boxGeometry args={[0.052, 0.012, 0.115]} />
+            </mesh>
+          </group>
         </>
       )}
       
-      {/* Dress */}
+      {/* ===== DRESS SHOES ===== */}
+      {hasDressShoes && (
+        <>
+          <group position={[-hipWidth * 0.5, -legLength - 0.82, 0]} rotation={poseRotations.leftLegRotation}>
+            <mesh position={[0, 0, 0.02]} material={dressShoeMat} castShadow>
+              <boxGeometry args={[0.042, 0.025, 0.1]} />
+            </mesh>
+            {/* Pointed toe */}
+            <mesh position={[0, -0.005, 0.065]} rotation={[-0.2, 0, 0]} material={dressShoeMat}>
+              <boxGeometry args={[0.035, 0.015, 0.04]} />
+            </mesh>
+            {/* Heel */}
+            <mesh position={[0, -0.015, -0.03]} material={dressShoeMat}>
+              <boxGeometry args={[0.035, 0.025, 0.025]} />
+            </mesh>
+          </group>
+          <group position={[hipWidth * 0.5, -legLength - 0.82, 0]} rotation={poseRotations.rightLegRotation}>
+            <mesh position={[0, 0, 0.02]} material={dressShoeMat} castShadow>
+              <boxGeometry args={[0.042, 0.025, 0.1]} />
+            </mesh>
+            <mesh position={[0, -0.005, 0.065]} rotation={[-0.2, 0, 0]} material={dressShoeMat}>
+              <boxGeometry args={[0.035, 0.015, 0.04]} />
+            </mesh>
+            <mesh position={[0, -0.015, -0.03]} material={dressShoeMat}>
+              <boxGeometry args={[0.035, 0.025, 0.025]} />
+            </mesh>
+          </group>
+        </>
+      )}
+      
+      {/* ===== DRESS ===== */}
       {hasDress && (
-        <mesh position={[0, -0.2, 0]} material={dressMat} castShadow>
-          <coneGeometry args={[hipWidth + 0.08, 0.6, 24]} />
-        </mesh>
+        <group position={[0, 0, 0]}>
+          {/* Bodice */}
+          <mesh position={[0, 0.02, 0]} material={dressMat} castShadow>
+            <cylinderGeometry args={[waistWidth + clothOffset, chestWidth + clothOffset * 2, 0.25, 24]} />
+          </mesh>
+          {/* Skirt - flared */}
+          <mesh position={[0, -0.22, 0]} material={dressMat} castShadow>
+            <coneGeometry args={[hipWidth + 0.1, 0.5, 24]} />
+          </mesh>
+          {/* Straps */}
+          <mesh position={[-0.04, 0.18, 0]} rotation={[0, 0, 0.2]} material={dressMat}>
+            <boxGeometry args={[0.015, 0.1, 0.01]} />
+          </mesh>
+          <mesh position={[0.04, 0.18, 0]} rotation={[0, 0, -0.2]} material={dressMat}>
+            <boxGeometry args={[0.015, 0.1, 0.01]} />
+          </mesh>
+        </group>
       )}
     </group>
   );
@@ -962,6 +1501,16 @@ function Floor() {
   );
 }
 
+// Scene Reference Setter - shares scene with export
+function SceneExporter() {
+  const { scene } = useThree();
+  useEffect(() => {
+    setSceneRef(scene);
+    return () => setSceneRef(null);
+  }, [scene]);
+  return null;
+}
+
 export default function AvatarCanvas() {
   return (
     <div className="w-full h-full">
@@ -972,6 +1521,7 @@ export default function AvatarCanvas() {
         onCreated={({ gl }) => { gl.setClearColor('#12121f'); }}
       >
         <Suspense fallback={<Loader />}>
+          <SceneExporter />
           <ambientLight intensity={0.5} />
           <directionalLight position={[5, 8, 5]} intensity={1.2} castShadow shadow-mapSize={[2048, 2048]} />
           <directionalLight position={[-3, 3, -3]} intensity={0.4} />

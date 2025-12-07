@@ -1,9 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import * as THREE from 'three';
 
 // ============================================
 // MAKEHUMAN-STYLE AVATAR ENGINE - STATE
 // ============================================
+
+// Scene reference for export (not persisted)
+let sceneRef: THREE.Scene | null = null;
+export const setSceneRef = (scene: THREE.Scene | null) => { sceneRef = scene; };
+export const getSceneRef = () => sceneRef;
 
 export type MainTab = 'modelling' | 'geometries' | 'materials' | 'pose' | 'rendering' | 'settings' | 'export';
 export type ModellingTab = 'main' | 'gender' | 'face' | 'torso' | 'arms' | 'legs' | 'random' | 'custom' | 'measure';

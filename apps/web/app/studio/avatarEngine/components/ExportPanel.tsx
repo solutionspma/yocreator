@@ -1,29 +1,26 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useAvatarStore } from '../store';
+import React, { useState, useCallback } from 'react';
+import { useAvatarStore, getSceneRef } from '../store';
+import * as THREE from 'three';
+import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
+import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter.js';
 
 // Export formats
 const exportFormats = [
   { id: 'glb', name: 'GLB', desc: 'GLTF Binary - Best for web & Unity', icon: '🌐' },
-  { id: 'gltf', name: 'GLTF', desc: 'GL Transmission Format - JSON + binary', icon: '📄' },
-  { id: 'fbx', name: 'FBX', desc: 'Autodesk FBX - Unreal, Maya, Blender', icon: '🎮' },
+  { id: 'gltf', name: 'GLTF', desc: 'GL Transmission Format - JSON', icon: '📄' },
   { id: 'obj', name: 'OBJ', desc: 'Wavefront OBJ - Universal mesh format', icon: '📐' },
-  { id: 'dae', name: 'DAE', desc: 'Collada - Open standard format', icon: '🔷' },
-  { id: 'stl', name: 'STL', desc: 'Stereolithography - 3D printing', icon: '🖨️' },
-  { id: 'ply', name: 'PLY', desc: 'Polygon File Format - Point clouds', icon: '📊' },
-  { id: 'mhm', name: 'MHM', desc: 'MakeHuman Model - Native format', icon: '👤' },
+  { id: 'json', name: 'JSON', desc: 'Avatar data - Reload later', icon: '💾' },
+  { id: 'png', name: 'PNG', desc: 'Screenshot - Current view', icon: '📸' },
 ];
 
 // Export options
 const exportOptions = [
   { id: 'mesh', label: 'Include Mesh', default: true },
-  { id: 'skeleton', label: 'Include Skeleton/Rig', default: true },
-  { id: 'morphs', label: 'Include Morph Targets', default: true },
-  { id: 'textures', label: 'Include Textures', default: true },
   { id: 'clothing', label: 'Include Clothing', default: true },
   { id: 'hair', label: 'Include Hair', default: true },
-  { id: 'pose', label: 'Apply Current Pose', default: false },
+  { id: 'pose', label: 'Apply Current Pose', default: true },
   { id: 'scale', label: 'Scale to Real World Units', default: true },
 ];
 
@@ -35,18 +32,140 @@ export default function ExportPanel() {
   );
   const [scale, setScale] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportStatus, setExportStatus] = useState<string | null>(null);
 
   const toggleOption = (id: string) => {
     setOptions((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
+  // Download helper
+  const downloadFile = (data: Blob | string, filename: string) => {
+    const url = typeof data === 'string' ? data : URL.createObjectURL(data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if (typeof data !== 'string') URL.revokeObjectURL(url);
+  };
+
+  // Export GLB/GLTF
+  const exportGLTF = useCallback(async (binary: boolean) => {
+    const scene = getSceneRef();
+    if (!scene) {
+      setExportStatus('❌ Scene not ready');
+      return;
+    }
+    
+    const exporter = new GLTFExporter();
+    const options = { binary, trs: true };
+    
+    return new Promise<void>((resolve) => {
+      exporter.parse(
+        scene,
+        (result) => {
+          if (binary) {
+            const blob = new Blob([result as ArrayBuffer], { type: 'application/octet-stream' });
+            downloadFile(blob, `${avatar.name || 'avatar'}.glb`);
+          } else {
+            const json = JSON.stringify(result, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            downloadFile(blob, `${avatar.name || 'avatar'}.gltf`);
+          }
+          resolve();
+        },
+        (error) => {
+          console.error('GLTF export error:', error);
+          setExportStatus('❌ Export failed');
+          resolve();
+        },
+        options
+      );
+    });
+  }, [avatar.name]);
+
+  // Export OBJ
+  const exportOBJ = useCallback(async () => {
+    const scene = getSceneRef();
+    if (!scene) {
+      setExportStatus('❌ Scene not ready');
+      return;
+    }
+    
+    const exporter = new OBJExporter();
+    const result = exporter.parse(scene);
+    const blob = new Blob([result], { type: 'text/plain' });
+    downloadFile(blob, `${avatar.name || 'avatar'}.obj`);
+  }, [avatar.name]);
+
+  // Export JSON (avatar data)
+  const exportJSON = useCallback(() => {
+    const data = JSON.stringify(avatar, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    downloadFile(blob, `${avatar.name || 'avatar'}.json`);
+  }, [avatar]);
+
+  // Export PNG screenshot
+  const exportPNG = useCallback(() => {
+    const canvas = document.querySelector('canvas');
+    if (!canvas) {
+      setExportStatus('❌ Canvas not found');
+      return;
+    }
+    
+    canvas.toBlob((blob) => {
+      if (blob) {
+        downloadFile(blob, `${avatar.name || 'avatar'}.png`);
+      }
+    }, 'image/png');
+  }, [avatar.name]);
+
   const handleExport = async () => {
     setIsExporting(true);
-    // Simulate export
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsExporting(false);
-    alert(`Export complete! Format: ${selectedFormat.toUpperCase()}`);
+    setExportStatus('Preparing export...');
+    
+    try {
+      switch (selectedFormat) {
+        case 'glb':
+          await exportGLTF(true);
+          break;
+        case 'gltf':
+          await exportGLTF(false);
+          break;
+        case 'obj':
+          await exportOBJ();
+          break;
+        case 'json':
+          exportJSON();
+          break;
+        case 'png':
+          exportPNG();
+          break;
+        default:
+          setExportStatus('❌ Unsupported format');
+      }
+      
+      setExportStatus(`✅ Exported as ${selectedFormat.toUpperCase()}`);
+    } catch (err) {
+      console.error('Export error:', err);
+      setExportStatus('❌ Export failed');
+    } finally {
+      setIsExporting(false);
+      setTimeout(() => setExportStatus(null), 3000);
+    }
   };
+
+  // Copy avatar JSON to clipboard
+  const copyJSON = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(avatar, null, 2));
+      setExportStatus('✅ Copied to clipboard');
+      setTimeout(() => setExportStatus(null), 2000);
+    } catch {
+      setExportStatus('❌ Failed to copy');
+    }
+  }, [avatar]);
 
   return (
     <div className="p-4">
@@ -187,13 +306,26 @@ export default function ExportPanel() {
         )}
       </button>
 
+      {/* Export Status */}
+      {exportStatus && (
+        <div className="mt-3 p-2 bg-[#2a2a4a] rounded-lg text-center text-sm">
+          {exportStatus}
+        </div>
+      )}
+
       {/* Quick Export Buttons */}
       <div className="mt-4 grid grid-cols-2 gap-2">
-        <button className="py-2 bg-[#2a2a4a] hover:bg-[#3a3a5a] rounded-lg text-sm transition">
+        <button 
+          onClick={copyJSON}
+          className="py-2 bg-[#2a2a4a] hover:bg-[#3a3a5a] rounded-lg text-sm transition"
+        >
           📋 Copy JSON
         </button>
-        <button className="py-2 bg-[#2a2a4a] hover:bg-[#3a3a5a] rounded-lg text-sm transition">
-          🔗 Share Link
+        <button 
+          onClick={exportPNG}
+          className="py-2 bg-[#2a2a4a] hover:bg-[#3a3a5a] rounded-lg text-sm transition"
+        >
+          📸 Screenshot
         </button>
       </div>
 
